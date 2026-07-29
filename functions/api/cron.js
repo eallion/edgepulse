@@ -339,6 +339,7 @@ async function dispatchAlerts(alerts, alertConfig) {
     // 7. Email / Resend / SMTP Notification
     if (shouldSend('email') && (alertConfig.emailEnabled ?? true) && alertConfig.email && alertConfig.email.receiver) {
       const emailPayload = {
+        from: alertConfig.email.smtpFrom || alertConfig.email.smtpUser,
         to: alertConfig.email.receiver,
         subject: title,
         html: `<div style="padding: 20px; background: #0f172a; color: #f8fafc; font-family: sans-serif;">

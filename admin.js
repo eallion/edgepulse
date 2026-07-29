@@ -251,6 +251,7 @@ function fillSettingsForm(config) {
     if (alerts.email.smtpPort) document.getElementById('settingSmtpPort').value = alerts.email.smtpPort;
     if (alerts.email.smtpUser) document.getElementById('settingSmtpUser').value = alerts.email.smtpUser;
     if (alerts.email.smtpPass) document.getElementById('settingSmtpPass').value = alerts.email.smtpPass;
+    if (alerts.email.smtpFrom) document.getElementById('settingSmtpFrom').value = alerts.email.smtpFrom;
     if (alerts.email.receiver) document.getElementById('settingEmailReceiver').value = alerts.email.receiver;
   }
 
@@ -438,6 +439,7 @@ async function handleSaveSettings(event) {
       smtpPort: document.getElementById('settingSmtpPort').value,
       smtpUser: document.getElementById('settingSmtpUser').value,
       smtpPass: document.getElementById('settingSmtpPass').value,
+      smtpFrom: document.getElementById('settingSmtpFrom').value,
       receiver: document.getElementById('settingEmailReceiver').value,
     },
   };
