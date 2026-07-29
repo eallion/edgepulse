@@ -40,7 +40,7 @@ function applyTheme(theme) {
 }
 
 async function fetchStatus() {
-  const refreshBtn = document.getElementById('refreshBtn');
+  const refreshBtn = document.getElementById('footerRefreshBtn');
   if (refreshBtn) refreshBtn.style.opacity = '0.6';
 
   try {
@@ -55,12 +55,16 @@ async function fetchStatus() {
   }
 }
 
+function manualRefresh() {
+  fetchStatus();
+}
+
 function startCountdown() {
   if (timerId) clearInterval(timerId);
   timerId = setInterval(() => {
     countdownSeconds--;
     const countdownEl = document.getElementById('countdownText');
-    if (countdownEl) countdownEl.textContent = `(${countdownSeconds}s)`;
+    if (countdownEl) countdownEl.textContent = `刷新 (${countdownSeconds}s)`;
 
     if (countdownSeconds <= 0) {
       fetchStatus();
