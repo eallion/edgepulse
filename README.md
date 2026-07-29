@@ -8,7 +8,10 @@
 
 - 🛡️ **纯 EdgeOne Serverless 架构**：基于 Edge CDN 静态托管 + V8 Edge Functions + EdgeOne KV Storage，无需配置或购买独立 CVM / Docker。
 - 🌐 **多域名动态状态页 (Multi-Domain Status Pages)**：同一套部署服务支持绑定无限个域名（如 `status.a.com`, `status.b.com`），根据访问域名自动匹配展示对应的状态页与专属服务节点。
-- 📊 **现代暗黑 Glassmorphism 界面**：高颜值玻璃拟物风格 UI，包含动态 Sparkline 耗时、30 天可用率条形图（Uptime Bar）、SSL 证书及域名到期倒计时 Badge、自适应移动端与 30s 自动倒计时刷新。
+- 📊 **现代暗黑 Glassmorphism 界面与多主题支持**：
+  - 🎨 **三套精美主题配色 (GitHub Dimmed 默认)**：右上角支持一键无缝循环切换 **GitHub Dimmed (默认柔和暗黑)**、**GitHub Light (极简浅色)** 以及 **GitHub Dark (经典黑夜)**。
+  - 🔄 **前后台全局共享持久化**：前台监控面板 (`index.html`) 与后台控制中心 (`admin.html`) 共享主题切换偏好，自动写入 `localStorage` 记忆。
+  - 📈 包含动态 Sparkline 耗时、30 天可用率条形图（Uptime Bar）、SSL 证书及域名到期倒计时 Badge、自适应移动端与 30s 自动倒计时刷新。
 - ⚙️ **前端可视化管理 Modal**：支持在 UI 界面点击【⚙️ 管理监控】弹窗，快速添加 HTTP(S)、ICMP、TCP 端口、域名到期或 Push 心跳监控节点。
   - 🟢 **HTTP(S) 状态码与延迟**：**默认使用极轻量 `HEAD` 请求**（只请求 Headers、不下载 Response Body、零服务器流量与内存开销）；当目标站点不支持 `HEAD` 返回 `545` (Unknown Status) 或 `405` (Method Not Allowed) 等边缘/防刷错误时，**自动智能降级重试 `GET` 请求**，保证零误报。支持自定义方法。
   - 🔍 **内容/关键字匹配**：校验 Response Body 字符串或 JSON 路径值，防止假死报错。

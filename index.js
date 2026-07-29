@@ -7,9 +7,38 @@ let countdownSeconds = 30;
 let timerId = null;
 
 document.addEventListener('DOMContentLoaded', () => {
+  initTheme();
   fetchStatus();
   startCountdown();
 });
+
+/* Theme Manager: Dimmed (Default), Light, Dark */
+function initTheme() {
+  const savedTheme = localStorage.getItem('edgepulse_theme') || 'dimmed';
+  applyTheme(savedTheme);
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'dimmed';
+  const themeMap = { dimmed: 'light', light: 'dark', dark: 'dimmed' };
+  const nextTheme = themeMap[current] || 'dimmed';
+  applyTheme(nextTheme);
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('edgepulse_theme', theme);
+
+  const iconEl = document.getElementById('themeBtnIcon');
+  if (iconEl) {
+    const labels = {
+      dimmed: '🌙 Dimmed',
+      light: '☀️ Light',
+      dark: '🖤 Dark',
+    };
+    iconEl.textContent = labels[theme] || '🌙 Dimmed';
+  }
+}
 
 async function fetchStatus() {
   const refreshBtn = document.getElementById('refreshBtn');

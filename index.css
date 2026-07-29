@@ -1,27 +1,70 @@
 /* EdgePulse - Modern Glassmorphism Design System */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
 
-:root {
-  --bg-primary: #090d16;
-  --bg-card: rgba(18, 26, 43, 0.65);
-  --bg-card-hover: rgba(28, 39, 64, 0.75);
-  --border-card: rgba(255, 255, 255, 0.08);
-  --border-card-bright: rgba(6, 182, 212, 0.3);
+:root, :root[data-theme="dimmed"] {
+  /* Design Tokens - Default Theme: GitHub Dimmed */
+  --bg-primary: #1c2128;
+  --bg-card: rgba(34, 39, 46, 0.85);
+  --bg-card-hover: rgba(45, 51, 59, 0.9);
+  --border-card: #373e47;
+  --border-card-bright: #444c56;
   
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --text-primary: #adbac7;
+  --text-secondary: #768390;
+  --text-muted: #636e7b;
+  
+  --color-accent: #539bf5;
+  --color-green: #57ab5a;
+  --color-green-glow: rgba(87, 171, 90, 0.25);
+  --color-yellow: #c69026;
+  --color-yellow-glow: rgba(198, 144, 38, 0.25);
+  --color-red: #e5534b;
+  --color-red-glow: rgba(229, 83, 75, 0.25);
 
-  --color-green: #10b981;
-  --color-green-glow: rgba(16, 185, 129, 0.25);
-  --color-yellow: #f59e0b;
-  --color-yellow-glow: rgba(245, 158, 11, 0.25);
-  --color-red: #ef4444;
-  --color-red-glow: rgba(239, 68, 68, 0.25);
-  --color-accent: #06b6d4;
+  --font-heading: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
 
-  --font-heading: 'Outfit', sans-serif;
-  --font-body: 'Inter', sans-serif;
+:root[data-theme="light"] {
+  /* GitHub Light Theme */
+  --bg-primary: #ffffff;
+  --bg-card: #f6f8fa;
+  --bg-card-hover: #f3f4f6;
+  --border-card: #d0d7de;
+  --border-card-bright: #afb8c1;
+  
+  --text-primary: #24292f;
+  --text-secondary: #57606a;
+  --text-muted: #8c959f;
+  
+  --color-accent: #0969da;
+  --color-green: #1a7f37;
+  --color-green-glow: rgba(26, 127, 55, 0.25);
+  --color-yellow: #9a6700;
+  --color-yellow-glow: rgba(154, 103, 0, 0.25);
+  --color-red: #cf222e;
+  --color-red-glow: rgba(207, 34, 46, 0.25);
+}
+
+:root[data-theme="dark"] {
+  /* GitHub Dark Classic Theme */
+  --bg-primary: #0d1117;
+  --bg-card: rgba(22, 27, 34, 0.85);
+  --bg-card-hover: rgba(33, 38, 45, 0.9);
+  --border-card: #30363d;
+  --border-card-bright: #484f58;
+  
+  --text-primary: #c9d1d9;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
+  
+  --color-accent: #58a6ff;
+  --color-green: #3fb950;
+  --color-green-glow: rgba(63, 185, 80, 0.25);
+  --color-yellow: #d29922;
+  --color-yellow-glow: rgba(210, 153, 34, 0.25);
+  --color-red: #f85149;
+  --color-red-glow: rgba(248, 81, 73, 0.25);
 }
 
 * {
