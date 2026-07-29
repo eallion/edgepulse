@@ -1,7 +1,7 @@
 /**
  * EdgePulse Admin Dashboard Logic
- * Handles Authentication, Consolidated Settings (Explicit Toggles for Lark, WeChat, DingTalk, Telegram, Bark, PushPlus, Email),
- * Apex/Subdomain hierarchy detection, Expiry frequencies, and Node CRUD with dynamic Alert Channel selections.
+ * Handles Authentication, Consolidated Settings (Explicit Toggles), JSON Export & Strict Import Validation,
+ * Double-check Password Verification, Apex/Subdomain hierarchy detection, Expiry frequencies, and Node CRUD.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -224,7 +224,6 @@ let activeGroupsList = ['default'];
 function fillSettingsForm(config) {
   const alerts = config.alerts || {};
   
-  // Explicit Switches & Values
   document.getElementById('chkLarkEnabled').checked = alerts.larkEnabled ?? !!alerts.larkWebhook;
   if (alerts.larkWebhook) document.getElementById('settingLark').value = alerts.larkWebhook;
 
@@ -449,11 +448,23 @@ async function handleSaveSettings(event) {
   const updatedConfig = { ...cachedConfig, alerts, groups };
   await saveConfig(updatedConfig, token, '✅ 设置与告警配置保存成功！');
 
+  // Password Modification with Double Check
   const oldPassword = document.getElementById('settingOldPassword').value;
   const newUsername = document.getElementById('settingNewUsername').value;
   const newPassword = document.getElementById('settingNewPassword').value;
+  const confirmNewPassword = document.getElementById('settingConfirmNewPassword').value;
 
-  if (oldPassword && newPassword) {
+  if (oldPassword || newPassword) {
+    if (!oldPassword) {
+      alert('修改密码必须输入当前旧密码！');
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      alert('❌ 两次输入的新密码不一致，请重新核对！');
+      return;
+    }
+
     try {
       const res = await fetch('/api/auth/change-password', {
         method: 'POST',
@@ -472,6 +483,66 @@ async function handleSaveSettings(event) {
       alert(`密码修改异常: ${err.message}`);
     }
   }
+}
+
+/* Backup Export & Strict Validation Import Logic */
+function exportConfigJson() {
+  const jsonStr = JSON.stringify(cachedConfig, null, 2);
+  const blob = new Blob([jsonStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `edgepulse-config-${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importConfigJson() {
+  const fileInput = document.getElementById('importJsonFile');
+  const file = fileInput ? fileInput.files[0] : null;
+
+  if (!file) {
+    alert('请先选择要导入的 JSON 配置文件！');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const content = e.target.result;
+      const importedData = JSON.parse(content);
+
+      // Strict Schema Validation Protocol
+      if (typeof importedData !== 'object' || importedData === null) {
+        throw new Error('导入文件内容不是有效的 JSON 对象');
+      }
+
+      if (!Array.isArray(importedData.sites)) {
+        throw new Error('配置缺少必需的 "sites" 站点数组节点');
+      }
+
+      for (let i = 0; i < importedData.sites.length; i++) {
+        const item = importedData.sites[i];
+        if (!item.id || !item.name || !item.type) {
+          throw new Error(`第 ${i + 1} 个监控节点校验失败：缺少必需的 id, name 或 type 属性`);
+        }
+      }
+
+      if (importedData.alerts && typeof importedData.alerts !== 'object') {
+        throw new Error('"alerts" 节点格式非法（需为 JSON 对象）');
+      }
+
+      const token = sessionStorage.getItem('edgepulse_token');
+      if (!confirm(`确认要恢复导入包含 ${importedData.sites.length} 个监控节点的配置吗？`)) return;
+
+      await saveConfig(importedData, token, '✅ 配置数据格式校验成功，恢复导入完成！');
+      fileInput.value = '';
+    } catch (err) {
+      alert(`❌ 格式校验失败，已拒绝导入：\n${err.message}`);
+    }
+  };
+
+  reader.readAsText(file);
 }
 
 async function saveConfig(configPayload, token, successMsg) {

@@ -362,7 +362,7 @@
               </div>
             </div>
 
-            <!-- 3. Password Modification -->
+            <!-- 3. Password Modification with Confirmation -->
             <div class="section-title">🔑 修改管理员账号与密码</div>
             <div class="form-group">
               <label>当前旧密码 (修改账号密码时必填)</label>
@@ -372,9 +372,30 @@
               <label>新用户名 (Username)</label>
               <input type="text" id="settingNewUsername" placeholder="留空则保持当前用户名">
             </div>
-            <div class="form-group">
-              <label>新密码 (New Password)</label>
-              <input type="password" id="settingNewPassword" placeholder="留空则保持当前密码">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label>新密码 (New Password)</label>
+                <input type="password" id="settingNewPassword" placeholder="无需修改密码请留空">
+              </div>
+              <div class="form-group">
+                <label>确认新密码 (Confirm New Password)</label>
+                <input type="password" id="settingConfirmNewPassword" placeholder="重新输入一遍新密码">
+              </div>
+            </div>
+
+            <!-- 4. Backup & Restore (JSON Import / Export) -->
+            <div class="section-title">📦 配置备份与导入恢复</div>
+            <div class="channel-box">
+              <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                <button type="button" class="btn-secondary" onclick="exportConfigJson()">📥 导出配置 JSON 备份文件</button>
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">
+                  <input type="file" id="importJsonFile" accept=".json" style="padding: 0.4rem;">
+                  <button type="button" class="btn-primary" onclick="importConfigJson()">📤 校验并恢复导入</button>
+                </div>
+              </div>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem; margin-bottom: 0;">
+                提示：导入配置时系统会自动进行严苛格式校验，仅允许规范的 EdgePulse 配置 JSON 导入。
+              </p>
             </div>
 
             <div style="margin-top: 2rem;">
