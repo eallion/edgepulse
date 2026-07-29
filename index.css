@@ -467,27 +467,51 @@ footer a {
   margin-bottom: 1.25rem;
 }
 
-.form-group label {
-  display: block;
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  margin-bottom: 0.4rem;
-}
-
-.form-group input, .form-group select {
+/* Cloudflare Kumo UI / Base UI Form Controls */
+input[type="text"],
+input[type="password"],
+input[type="url"],
+input[type="number"],
+input[type="email"],
+select,
+textarea {
   width: 100%;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-card);
   border: 1px solid var(--border-card);
-  border-radius: 8px;
+  border-radius: var(--radius-kumo, 8px);
   padding: 0.65rem 0.85rem;
   color: var(--text-primary);
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 0.875rem;
+  line-height: 1.4;
   outline: none;
+  box-sizing: border-box;
+  transition: all 0.15s ease-in-out;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-.form-group input:focus, .form-group select:focus {
-  border-color: var(--color-accent);
+input::placeholder, select::placeholder {
+  color: var(--text-muted);
+}
+
+/* Base UI / Kumo UI Focus Ring (Cloudflare Orange Accent) */
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="url"]:focus,
+input[type="number"]:focus,
+input[type="email"]:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--color-accent) !important;
+  box-shadow: 0 0 0 3px rgba(246, 130, 31, 0.2) !important;
+  background: var(--bg-card-hover);
+}
+
+/* Select dropdown options styling */
+select option {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  padding: 0.5rem;
 }
 
 .modal-footer {
