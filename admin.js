@@ -317,6 +317,8 @@ function getChannelLabel(key) {
 let activeGroupsList = ['default'];
 
 function fillSettingsForm(config) {
+  if (config.icp) document.getElementById('settingIcp').value = config.icp;
+
   const alerts = config.alerts || {};
   
   // Security Toggles
@@ -528,6 +530,7 @@ async function handleSaveSettings(event) {
   event.preventDefault();
   const token = sessionStorage.getItem('edgepulse_token');
 
+  const icp = document.getElementById('settingIcp').value;
   const totpEnabled = document.getElementById('chkTotpEnabled').checked;
   const totpSecret = document.getElementById('settingTotpSecret').value;
 
@@ -571,6 +574,7 @@ async function handleSaveSettings(event) {
 
   const updatedConfig = {
     ...cachedConfig,
+    icp,
     totpEnabled,
     totpSecret,
     turnstileEnabled,

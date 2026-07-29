@@ -96,6 +96,7 @@ async function handleStatusRequest(context) {
       title: pageConfig.title,
       logo: pageConfig.logo || '',
       announcement: pageConfig.announcement || '',
+      icp: globalConfig?.icp || '',
       overallStatus,
       updatedAt: new Date().toISOString(),
       sites: resultSites,

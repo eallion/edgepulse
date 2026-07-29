@@ -78,6 +78,16 @@ function renderPage(data) {
   if (data.logo) document.getElementById('appLogo').textContent = data.logo;
   if (data.announcement) document.getElementById('appAnnouncement').textContent = data.announcement;
 
+  // Update ICP License in Footer
+  const icpContainer = document.getElementById('icpContainer');
+  const icpText = document.getElementById('icpText');
+  if (data.icp && data.icp.trim()) {
+    if (icpText) icpText.textContent = data.icp.trim();
+    if (icpContainer) icpContainer.style.display = 'inline';
+  } else {
+    if (icpContainer) icpContainer.style.display = 'none';
+  }
+
   // Update Overall Status Banner
   const statusDot = document.getElementById('statusDot');
   const overallStatusText = document.getElementById('overallStatusText');

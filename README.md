@@ -68,7 +68,8 @@
 
 ## 🔐 独立管理后台与默认登录凭据
 
-- 🔐 **后台独立管理面板 (`/admin.html`)**：支持默认 `admin/admin` 登录与旧密码校验修改。包含三大高效控制模块：
+- 🔐 **后台独立管理面板 (`/admin.html`)**：访问入口地址为 **`https://your-domain.com/admin.html`**，支持默认 `admin/admin` 登录与旧密码校验修改。包含四大高效控制模块：
+  - 🌐 **站点基本配置与 ICP 备案号**：支持在后台自定义配置 ICP 备案号（如 `粤ICP备12345678号-1`），配置后会自动动态渲染在公共状态页 Footer 的【刷新 (30s)】文本左侧（留空则自动隐藏）。
   - 🔑 **Passkey 无密码极速登录 (WebAuthn)**：原生支持 Bitwarden 插件弹窗、macOS TouchID/FaceID 及 YubiKey 硬件密钥注册与免密登录。
   - 🛡️ **2FA 双因素身份验证 (TOTP)**：支持绑定 Google Authenticator、Bitwarden 2FA 等身份验证器，登录时进行 6 位数动态验证。
   - 🤖 **Cloudflare Turnstile 人机防护 (默认关闭)**：支持集成 Cloudflare 隐形人机验证，并**原生支持 Cloudflare 官方 Dev Site Keys 调试**（`1x00000000000000000000AA` 总是通过 / `2x00000000000000000000AB` 总是拦截）。

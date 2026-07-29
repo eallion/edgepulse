@@ -270,6 +270,15 @@
         <!-- Tab 3: Settings -->
         <div id="tab-settings" style="display: none;">
           <form onsubmit="handleSaveSettings(event)">
+            <!-- 0. General Site Settings -->
+            <div class="section-title">🌐 站点基本配置</div>
+            <div class="channel-box">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label>ICP 备案号 (设置后将显示在公共状态页 Footer 刷新文本左侧，留空则不显示)</label>
+                <input type="text" id="settingIcp" placeholder="例如: 粤ICP备12345678号-1 或 沪ICP备87654321号">
+              </div>
+            </div>
+
             <!-- 1. Notification Channels with Explicit Toggles -->
             <div class="section-title">🔔 告警通知渠道设置 (需显式勾选开启)</div>
 
