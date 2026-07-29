@@ -187,8 +187,8 @@ function renderSitesTable(sites) {
 
     let expiryRulesText = [];
     if (site.checkDomain) expiryRulesText.push(`域名到期 (${site.domainWarnDays || 30}d)`);
-    if (site.checkSsl) expiryRulesText.push(`SSL到期 (${site.sslWarnDays || 14}d)`);
-    const freqText = site.expiryFrequency === 'weekly' ? '每周' : '每天';
+    if (site.checkSsl) expiryRulesText.push(`SSL到期 (${site.sslWarnDays || 30}d)`);
+    const freqText = site.expiryFrequency === 'monthly' ? '每月' : (site.expiryFrequency === 'weekly' ? '每周' : '每天');
     const rulesSummary = expiryRulesText.length > 0 ? `${expiryRulesText.join(' + ')} [${freqText}]` : '未开启到期监控';
 
     tr.innerHTML = `
@@ -369,7 +369,7 @@ async function handleCreateSite(event) {
   const checkSsl = document.getElementById('chkEnableSslExpiry').checked;
   const expiryFrequency = document.getElementById('expiryFrequency').value;
   const domainWarnDays = parseInt(document.getElementById('domainWarnDays').value || '30', 10);
-  const sslWarnDays = parseInt(document.getElementById('sslWarnDays').value || '14', 10);
+  const sslWarnDays = parseInt(document.getElementById('sslWarnDays').value || '30', 10);
 
   const selectedChannels = Array.from(document.querySelectorAll('input[name="alertChannel"]:checked')).map(el => el.value);
 

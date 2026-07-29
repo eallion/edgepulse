@@ -110,7 +110,7 @@ export async function onRequest(context) {
             try {
               const hostname = new URL(site.url).hostname;
               sslExpiryDays = await checkSslExpiry(hostname);
-              const sslWarnThreshold = site.sslWarnDays || 14;
+              const sslWarnThreshold = site.sslWarnDays || 30;
 
               if (sslExpiryDays !== null && sslExpiryDays <= sslWarnThreshold) {
                 alertQueue.push({
