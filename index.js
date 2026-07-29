@@ -151,3 +151,71 @@ function createServiceCard(site) {
 
   return card;
 }
+
+/* Modal Form Controllers */
+function openAdminModal() {
+  document.getElementById('adminModal').classList.add('active');
+}
+
+function closeAdminModal() {
+  document.getElementById('adminModal').classList.remove('active');
+}
+
+function toggleSiteFormFields() {
+  const type = document.getElementById('siteType').value;
+  document.getElementById('urlGroup').style.display = (type === 'http') ? 'block' : 'none';
+  document.getElementById('hostGroup').style.display = (type === 'icmp' || type === 'tcp') ? 'block' : 'none';
+  document.getElementById('domainGroup').style.display = (type === 'domain') ? 'block' : 'none';
+}
+
+async function handleSaveSite(event) {
+  event.preventDefault();
+  const type = document.getElementById('siteType').value;
+  const name = document.getElementById('siteName').value;
+  const url = document.getElementById('siteUrl').value;
+  const host = document.getElementById('siteHost').value;
+  const domain = document.getElementById('siteDomain').value;
+  const group = document.getElementById('siteGroup').value;
+  const adminKey = document.getElementById('adminKey').value;
+
+  const newSite = {
+    id: `site-${Date.now()}`,
+    name,
+    type,
+    group,
+    ...(url && { url }),
+    ...(host && { host }),
+    ...(domain && { domain }),
+  };
+
+  try {
+    // 1. Fetch current config
+    const currentRes = await fetch('/api/config');
+    const currentConfig = await currentRes.json();
+
+    const updatedSites = [...(currentConfig.sites || []), newSite];
+    const updatedConfig = { ...currentConfig, sites: updatedSites };
+
+    // 2. Post updated config with Authorization
+    const saveRes = await fetch('/api/config', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${adminKey}`,
+      },
+      body: JSON.stringify(updatedConfig),
+    });
+
+    if (!saveRes.ok) {
+      const errData = await saveRes.json();
+      alert(`保存失败: ${errData.error || '秘钥不匹配或网络错误'}`);
+      return;
+    }
+
+    alert('✅ 监控节点保存成功！系统将在下一次巡检时生效。');
+    closeAdminModal();
+    fetchStatus();
+  } catch (err) {
+    alert(`保存失败: ${err.message}`);
+  }
+}
