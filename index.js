@@ -73,8 +73,18 @@ function startCountdown() {
 }
 
 function renderPage(data) {
-  // Update Header & Announcement
-  if (data.title) document.getElementById('appTitle').textContent = data.title;
+  // Update Title & Favicon
+  if (data.title) {
+    document.title = data.title;
+    const titleEl = document.getElementById('appTitle');
+    if (titleEl) titleEl.textContent = data.title;
+  }
+
+  if (data.favicon) {
+    const favEl = document.getElementById('siteFavicon');
+    if (favEl) favEl.href = data.favicon;
+  }
+
   if (data.logo) document.getElementById('appLogo').textContent = data.logo;
   if (data.announcement) document.getElementById('appAnnouncement').textContent = data.announcement;
 

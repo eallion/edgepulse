@@ -1,7 +1,7 @@
 /**
  * EdgePulse Admin Dashboard Logic
  * Powered by Cloudflare Kumo UI / Base UI Tokens.
- * Features Kumo Toast Notification & Kumo Confirm Dialog (Replacing native alert & confirm).
+ * Supports Title, Online/Local Base64 Favicon Upload, Kumo Toast & Dialog components.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -33,6 +33,42 @@ function applyTheme(theme) {
   const iconEl = document.getElementById('themeBtnIcon');
   if (iconEl) {
     iconEl.innerHTML = finalTheme === 'light' ? SUN_SVG : MOON_SVG;
+  }
+}
+
+/* Local Favicon File Upload to Base64 Data:Image */
+function handleFaviconUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  if (!file.type.startsWith('image/')) {
+    showToast('请选择有效的图片文件 (如 PNG, ICO, SVG, JPG)', 'warning');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const dataUrl = e.target.result;
+    document.getElementById('settingFavicon').value = dataUrl;
+    updateFaviconPreview();
+    showToast('图片已转换为 Data:Image 格式，保存后生效！', 'success');
+  };
+  reader.readAsDataURL(file);
+}
+
+function updateFaviconPreview() {
+  const val = document.getElementById('settingFavicon').value.trim();
+  const imgEl = document.getElementById('faviconPreviewImg');
+  const favEl = document.getElementById('siteFavicon');
+
+  if (val) {
+    if (imgEl) {
+      imgEl.src = val;
+      imgEl.style.display = 'block';
+    }
+    if (favEl) favEl.href = val;
+  } else {
+    if (imgEl) imgEl.style.display = 'none';
   }
 }
 
@@ -393,6 +429,12 @@ function getChannelLabel(key) {
 let activeGroupsList = ['default'];
 
 function fillSettingsForm(config) {
+  if (config.title) document.getElementById('settingTitle').value = config.title;
+  if (config.favicon) {
+    document.getElementById('settingFavicon').value = config.favicon;
+    updateFaviconPreview();
+  }
+
   if (config.icp) document.getElementById('settingIcp').value = config.icp;
 
   const alerts = config.alerts || {};
@@ -608,6 +650,9 @@ async function handleSaveSettings(event) {
   event.preventDefault();
   const token = sessionStorage.getItem('edgepulse_token');
 
+  const title = document.getElementById('settingTitle').value;
+  const favicon = document.getElementById('settingFavicon').value;
+
   const icp = document.getElementById('settingIcp').value;
   const totpEnabled = document.getElementById('chkTotpEnabled').checked;
   const totpSecret = document.getElementById('settingTotpSecret').value;
@@ -652,6 +697,8 @@ async function handleSaveSettings(event) {
 
   const updatedConfig = {
     ...cachedConfig,
+    title,
+    favicon,
     icp,
     totpEnabled,
     totpSecret,
@@ -662,7 +709,7 @@ async function handleSaveSettings(event) {
     groups
   };
 
-  await saveConfig(updatedConfig, token, '安全与系统设置保存成功！');
+  await saveConfig(updatedConfig, token, '站点与系统设置保存成功！');
 
   const oldPassword = document.getElementById('settingOldPassword').value;
   const newUsername = document.getElementById('settingNewUsername').value;
@@ -710,7 +757,7 @@ function exportConfigJson() {
   a.download = `edgepulse-config-${new Date().toISOString().split('T')[0]}.json`;
   a.click();
   URL.revokeObjectURL(url);
-  showToast('配置 JSON 备份文件已成功导出导出下载！', 'success');
+  showToast('配置 JSON 备份文件已成功导出下载！', 'success');
 }
 
 async function importConfigJson() {

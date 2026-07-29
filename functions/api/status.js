@@ -91,10 +91,11 @@ async function handleStatusRequest(context) {
     }
 
     const payload = {
-      title: pageConfig.title,
+      title: pageConfig.title || globalConfig?.title || 'EdgePulse System Status',
       logo: pageConfig.logo || '',
       announcement: pageConfig.announcement || '',
       icp: globalConfig?.icp || '',
+      favicon: globalConfig?.favicon || '',
       overallStatus,
       updatedAt: new Date().toISOString(),
       sites: resultSites,
