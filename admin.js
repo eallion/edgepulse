@@ -697,74 +697,87 @@ function getChannelLabel(key) {
 
 let activeGroupsList = ['default'];
 
+function safeSetValue(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.value = val !== undefined && val !== null ? val : '';
+}
+
+function safeSetChecked(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.checked = !!val;
+}
+
 function fillSettingsForm(config) {
-  if (config.title) document.getElementById('settingTitle').value = config.title;
+  if (!config) return;
+
+  if (config.title) safeSetValue('settingTitle', config.title);
   if (config.favicon) {
-    document.getElementById('settingFavicon').value = config.favicon;
+    safeSetValue('settingFavicon', config.favicon);
     updateFaviconPreview();
   }
-  if (config.historyDays) document.getElementById('settingHistoryDays').value = String(config.historyDays);
-  if (config.refreshInterval) document.getElementById('settingRefreshInterval').value = String(config.refreshInterval);
+  if (config.historyDays) safeSetValue('settingHistoryDays', String(config.historyDays));
+  if (config.refreshInterval) safeSetValue('settingRefreshInterval', String(config.refreshInterval));
 
-  if (config.icp) document.getElementById('settingIcp').value = config.icp;
+  if (config.icp) safeSetValue('settingIcp', config.icp);
 
   const alerts = config.alerts || {};
   
   // Security Toggles
   const totpChk = document.getElementById('chkTotpEnabled');
-  totpChk.checked = !!config.totpEnabled;
-  if (config.totpSecret) {
-    document.getElementById('settingTotpSecret').value = config.totpSecret;
+  if (totpChk) {
+    totpChk.checked = !!config.totpEnabled;
+    totpChk.onchange = function() {
+      if (this.checked && !document.getElementById('settingTotpSecret').value.trim()) {
+        safeSetValue('settingTotpSecret', generateBase32Secret());
+        showToast('已为您自动生成 2FA 动态秘钥，请在身份验证器中绑定', 'info', '2FA 设置');
+      }
+    };
   }
-  totpChk.onchange = function() {
-    if (this.checked && !document.getElementById('settingTotpSecret').value.trim()) {
-      document.getElementById('settingTotpSecret').value = generateBase32Secret();
-      showToast('已为您自动生成 2FA 动态秘钥，请在身份验证器中绑定', 'info', '2FA 设置');
-    }
-  };
+  if (config.totpSecret) safeSetValue('settingTotpSecret', config.totpSecret);
 
-  document.getElementById('chkTurnstileEnabled').checked = !!config.turnstileEnabled;
-  if (config.turnstileSiteKey) document.getElementById('settingTurnstileSiteKey').value = config.turnstileSiteKey;
-  if (config.turnstileSecretKey) document.getElementById('settingTurnstileSecretKey').value = config.turnstileSecretKey;
+  safeSetChecked('chkTurnstileEnabled', config.turnstileEnabled);
+  if (config.turnstileSiteKey) safeSetValue('settingTurnstileSiteKey', config.turnstileSiteKey);
+  if (config.turnstileSecretKey) safeSetValue('settingTurnstileSecretKey', config.turnstileSecretKey);
 
   // Render Turnstile Widget in Login Form if Turnstile is Enabled
-  if (config.turnstileEnabled && config.turnstileSiteKey && typeof turnstile !== 'undefined') {
-    document.getElementById('turnstileContainer').style.display = 'flex';
-    try {
-      turnstileWidgetId = turnstile.render('#cfTurnstileWidget', {
-        sitekey: config.turnstileSiteKey,
-        theme: 'dark',
-      });
-    } catch (e) {}
-  } else {
-    document.getElementById('turnstileContainer').style.display = 'none';
+  const turnstileBox = document.getElementById('turnstileContainer');
+  if (turnstileBox) {
+    if (config.turnstileEnabled && config.turnstileSiteKey && typeof turnstile !== 'undefined') {
+      turnstileBox.style.display = 'flex';
+      try {
+        turnstileWidgetId = turnstile.render('#cfTurnstileWidget', {
+          sitekey: config.turnstileSiteKey,
+          theme: 'dark',
+        });
+      } catch (e) {}
+    } else {
+      turnstileBox.style.display = 'none';
+    }
   }
 
   // Alert Channel Toggles
-  document.getElementById('chkLarkEnabled').checked = alerts.larkEnabled ?? !!alerts.larkWebhook;
-  if (alerts.larkWebhook) document.getElementById('settingLark').value = alerts.larkWebhook;
+  safeSetChecked('chkLarkEnabled', alerts.larkEnabled ?? !!alerts.larkWebhook);
+  if (alerts.larkWebhook) safeSetValue('settingLark', alerts.larkWebhook);
 
-  document.getElementById('chkWechatEnabled').checked = alerts.wechatEnabled ?? !!alerts.wechatWebhook;
-  if (alerts.wechatWebhook) document.getElementById('settingWechat').value = alerts.wechatWebhook;
+  safeSetChecked('chkWechatEnabled', alerts.wechatEnabled ?? !!alerts.wechatWebhook);
+  if (alerts.wechatWebhook) safeSetValue('settingWechat', alerts.wechatWebhook);
 
-  document.getElementById('chkDingtalkEnabled').checked = alerts.dingtalkEnabled ?? !!alerts.dingtalkWebhook;
-  if (alerts.dingtalkWebhook) document.getElementById('settingDingtalk').value = alerts.dingtalkWebhook;
+  safeSetChecked('chkDingtalkEnabled', alerts.dingtalkEnabled ?? !!alerts.dingtalkWebhook);
+  if (alerts.dingtalkWebhook) safeSetValue('settingDingtalk', alerts.dingtalkWebhook);
 
-  document.getElementById('chkTelegramEnabled').checked = alerts.telegramEnabled ?? (!!alerts.telegramToken && !!alerts.telegramChatId);
+  safeSetChecked('chkTelegramEnabled', alerts.telegramEnabled ?? (!!alerts.telegramToken && !!alerts.telegramChatId));
   if (alerts.telegramToken && alerts.telegramChatId) {
-    document.getElementById('settingTelegram').value = `${alerts.telegramToken}|${alerts.telegramChatId}`;
+    safeSetValue('settingTelegram', `${alerts.telegramToken}|${alerts.telegramChatId}`);
   }
 
-  document.getElementById('chkBarkEnabled').checked = alerts.barkEnabled ?? !!alerts.barkUrl;
-  if (alerts.barkUrl) document.getElementById('settingBark').value = alerts.barkUrl;
+  safeSetChecked('chkBarkEnabled', alerts.barkEnabled ?? !!alerts.barkUrl);
+  if (alerts.barkUrl) safeSetValue('settingBark', alerts.barkUrl);
 
-  document.getElementById('chkPushplusEnabled').checked = alerts.pushplusEnabled ?? !!alerts.pushplusToken;
-  if (alerts.pushplusToken) document.getElementById('settingPushplus').value = alerts.pushplusToken;
+  safeSetChecked('chkPushplusEnabled', alerts.pushplusEnabled ?? !!alerts.pushplusToken);
+  if (alerts.pushplusToken) safeSetValue('settingPushplus', alerts.pushplusToken);
 
-  document.getElementById('chkEmailEnabled').checked = alerts.emailEnabled ?? (!!alerts.email && !!alerts.email.receiver);
+  safeSetChecked('chkEmailEnabled', alerts.emailEnabled ?? (!!alerts.email && !!alerts.email.receiver));
   if (alerts.email) {
-    if (alerts.email.smtpHost) document.getElementById('settingSmtpHost').value = alerts.email.smtpHost;
-    if (alerts.email.smtpPort) document.getElementById('settingSmtpPort').value = alerts.email.smtpPort;
     if (alerts.email.smtpUser) document.getElementById('settingSmtpUser').value = alerts.email.smtpUser;
     if (alerts.email.smtpPass) document.getElementById('settingSmtpPass').value = alerts.email.smtpPass;
     if (alerts.email.smtpFrom) document.getElementById('settingSmtpFrom').value = alerts.email.smtpFrom;
