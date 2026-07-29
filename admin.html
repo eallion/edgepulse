@@ -284,7 +284,7 @@
                 <label>站点标题</label>
                 <input type="text" id="settingTitle" placeholder="EdgePulse">
               </div>
-              <div class="form-group" style="margin-bottom: 0;">
+              <div class="form-group">
                 <label>Favicon 图标</label>
                 <span class="sub-hint">支持输入在线图片 URL 或上传本地图片转换为 Base64 保存</span>
                 <div style="display: flex; gap: 0.75rem; align-items: center; margin-top: 0.4rem;">
@@ -292,6 +292,15 @@
                   <input type="file" id="settingFaviconFile" accept="image/*" style="width: auto;" onchange="handleFaviconUpload(event)">
                   <img id="faviconPreviewImg" style="width: 32px; height: 32px; border-radius: 6px; border: 1px solid var(--border-card); display: none; object-fit: contain;">
                 </div>
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label>监控历史天数</label>
+                <select id="settingHistoryDays">
+                  <option value="30">30 天</option>
+                  <option value="60">60 天</option>
+                  <option value="90">90 天</option>
+                  <option value="180">180 天</option>
+                </select>
               </div>
             </div>
 

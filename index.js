@@ -121,6 +121,8 @@ function renderPage(data) {
 
   document.getElementById('lastCheckTime').textContent = `最后更新: ${new Date(data.updatedAt || Date.now()).toLocaleTimeString('zh-CN')}`;
 
+  const historyDays = data.historyDays || 30;
+
   // Update Summary Metrics
   const sites = data.sites || [];
   document.getElementById('totalSitesCount').textContent = sites.length;
@@ -128,6 +130,9 @@ function renderPage(data) {
   const validLatencies = sites.map(s => s.latency).filter(l => typeof l === 'number' && l > 0);
   const avgLatency = validLatencies.length > 0 ? Math.round(validLatencies.reduce((a, b) => a + b, 0) / validLatencies.length) : 0;
   document.getElementById('avgLatencyValue').textContent = `${avgLatency} ms`;
+  
+  const slaLabelEl = document.querySelector('.metric-inline-item:last-child .metric-inline-label');
+  if (slaLabelEl) slaLabelEl.textContent = `${historyDays} 天可用率`;
 
   // Render Service Cards grouped
   const container = document.getElementById('serviceListContainer');
@@ -159,7 +164,7 @@ function renderPage(data) {
     container.appendChild(groupHeader);
 
     groups[groupName].forEach(site => {
-      const card = createServiceCard(site);
+      const card = createServiceCard(site, historyDays);
       container.appendChild(card);
     });
   });
@@ -172,12 +177,12 @@ function generateSparklineSvg(history) {
   const max = Math.max(...history, 50);
   const min = Math.min(...history, 0);
   const range = max - min || 1;
-  const width = 90;
-  const height = 28;
+  const width = 70;
+  const height = 20;
 
   const points = history.map((val, idx) => {
     const x = (idx / (history.length - 1)) * width;
-    const y = height - ((val - min) / range) * (height - 6) - 3;
+    const y = height - ((val - min) / range) * (height - 4) - 2;
     return `${x.toFixed(1)},${y.toFixed(1)}`;
   }).join(' ');
 
@@ -195,7 +200,7 @@ function generateSparklineSvg(history) {
   `;
 }
 
-function createServiceCard(site) {
+function createServiceCard(site, historyDays = 30) {
   const card = document.createElement('div');
   card.className = 'service-card';
 
@@ -223,11 +228,10 @@ function createServiceCard(site) {
   else if (site.type === 'tcp') typeIcon = '🔌';
   else if (site.type === 'push') typeIcon = '⏱️';
 
-  // 30 Days Uptime Bar Pills
+  // Dynamic Uptime Bar Pills (30/60/90/180)
   let barsHtml = '';
-  const dummyHistory = site.history24h || Array.from({ length: 30 }, () => 30);
-  for (let i = 0; i < 30; i++) {
-    const isErrorPill = !isUp && i === 29;
+  for (let i = 0; i < historyDays; i++) {
+    const isErrorPill = !isUp && i === (historyDays - 1);
     const pillClass = isErrorPill ? 'down' : (site.latency > 150 ? 'degraded' : '');
     barsHtml += `<div class="uptime-bar-pill ${pillClass}" title="Day ${i + 1}: ${isErrorPill ? 'Disruption' : 'Operational'}"></div>`;
   }
@@ -251,7 +255,7 @@ function createServiceCard(site) {
     </div>
     <div class="uptime-bar-container">
       <div class="uptime-bar-header">
-        <span>过去 30 天可用率表现</span>
+        <span>过去 ${historyDays} 天可用率表现</span>
         <span style="font-family: var(--font-mono);">${site.uptime30d || 99.98}% 可用</span>
       </div>
       <div class="uptime-bars">

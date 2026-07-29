@@ -535,6 +535,7 @@ function fillSettingsForm(config) {
     document.getElementById('settingFavicon').value = config.favicon;
     updateFaviconPreview();
   }
+  if (config.historyDays) document.getElementById('settingHistoryDays').value = String(config.historyDays);
 
   if (config.icp) document.getElementById('settingIcp').value = config.icp;
 
@@ -781,6 +782,7 @@ async function handleSaveSettings(event) {
 
   const title = document.getElementById('settingTitle').value;
   const favicon = document.getElementById('settingFavicon').value;
+  const historyDays = parseInt(document.getElementById('settingHistoryDays').value || '30', 10);
 
   const icp = document.getElementById('settingIcp').value;
   const totpEnabled = document.getElementById('chkTotpEnabled').checked;
@@ -828,6 +830,7 @@ async function handleSaveSettings(event) {
     ...cachedConfig,
     title,
     favicon,
+    historyDays,
     icp,
     totpEnabled,
     totpSecret,

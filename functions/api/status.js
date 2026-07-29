@@ -91,6 +91,7 @@ async function handleStatusRequest(context) {
       announcement: pageConfig.announcement || '',
       icp: globalConfig?.icp || '',
       favicon: globalConfig?.favicon || '',
+      historyDays: globalConfig?.historyDays || 30,
       overallStatus,
       updatedAt: new Date().toISOString(),
       sites: resultSites,
