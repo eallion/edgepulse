@@ -5,8 +5,12 @@
   "framework": "static",
   "routes": [
     {
-      "src": "/api/(.*)",
+      "src": "^/api/(.*)$",
       "dest": "/functions/api/$1"
+    },
+    {
+      "src": "^/$",
+      "dest": "/index.html"
     }
   ]
 }
