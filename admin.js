@@ -220,6 +220,8 @@ function getChannelLabel(key) {
   return map[key] || key;
 }
 
+let activeGroupsList = ['核心服务', '网站节点', 'VPS 服务器', '域名资产'];
+
 function fillSettingsForm(config) {
   const alerts = config.alerts || {};
   if (alerts.larkWebhook) document.getElementById('settingLark').value = alerts.larkWebhook;
@@ -238,8 +240,52 @@ function fillSettingsForm(config) {
     if (alerts.email.receiver) document.getElementById('settingEmailReceiver').value = alerts.email.receiver;
   }
 
-  const groupsArr = config.groups || ['核心服务', '网站节点', 'VPS 服务器', '域名资产'];
-  document.getElementById('settingGroups').value = groupsArr.join(', ');
+  activeGroupsList = config.groups || ['核心服务', '网站节点', 'VPS 服务器', '域名资产'];
+  renderGroupTags();
+}
+
+function renderGroupTags() {
+  const container = document.getElementById('groupTagContainer');
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (activeGroupsList.length === 0) {
+    container.innerHTML = '<span style="font-size: 0.85rem; color: var(--text-muted);">暂无分组，请在下方输入框添加</span>';
+    return;
+  }
+
+  activeGroupsList.forEach((group, index) => {
+    const tag = document.createElement('span');
+    tag.className = 'checkbox-item';
+    tag.style.display = 'inline-flex';
+    tag.style.alignItems = 'center';
+    tag.style.gap = '0.4rem';
+    tag.innerHTML = `
+      <span>📁 ${group}</span>
+      <span onclick="removeGroupTag(${index})" title="删除分组" style="cursor: pointer; color: var(--color-red); font-weight: bold; margin-left: 0.3rem; padding: 0 0.2rem;">✕</span>
+    `;
+    container.appendChild(tag);
+  });
+}
+
+function addNewGroupTag() {
+  const inputEl = document.getElementById('newGroupInput');
+  const val = inputEl ? inputEl.value.trim() : '';
+
+  if (!val) return;
+  if (activeGroupsList.includes(val)) {
+    alert('该分组已存在');
+    return;
+  }
+
+  activeGroupsList.push(val);
+  inputEl.value = '';
+  renderGroupTags();
+}
+
+function removeGroupTag(index) {
+  activeGroupsList.splice(index, 1);
+  renderGroupTags();
 }
 
 function updateAvailableChannelsAndGroups(config) {
@@ -351,8 +397,7 @@ async function handleSaveSettings(event) {
     },
   };
 
-  const groupsInput = document.getElementById('settingGroups').value;
-  const groups = groupsInput.split(/[,，]/).map(g => g.trim()).filter(Boolean);
+  const groups = activeGroupsList;
 
   const updatedConfig = { ...cachedConfig, alerts, groups };
   await saveConfig(updatedConfig, token, '✅ 设置与告警配置保存成功！');

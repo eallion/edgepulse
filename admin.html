@@ -297,8 +297,14 @@
             <!-- 2. Group Management -->
             <div class="section-title">📂 监控分组管理</div>
             <div class="form-group">
-              <label>自定义分组列表 (用英文逗号逗开)</label>
-              <input type="text" id="settingGroups" placeholder="核心服务, 网站节点, VPS 服务器, 域名资产" value="核心服务, 网站节点, VPS 服务器, 域名资产">
+              <label>当前已有分组列表 (点击标签上的 ✕ 按钮可删除该分组)</label>
+              <div class="checkbox-group" id="groupTagContainer" style="margin-bottom: 0.75rem;">
+                <!-- Dynamically rendered group tags -->
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                <input type="text" id="newGroupInput" placeholder="输入新分组名称 (例如: 数据库节点)" style="flex: 1;" onkeypress="if(event.key === 'Enter'){ event.preventDefault(); addNewGroupTag(); }">
+                <button type="button" class="btn-secondary" onclick="addNewGroupTag()">➕ 添加分组</button>
+              </div>
             </div>
 
             <!-- 3. Password Modification -->
