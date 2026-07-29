@@ -105,11 +105,11 @@ function renderPage(data) {
   statusDot.className = 'status-pulse-dot ' + (data.overallStatus || 'operational');
   
   if (data.overallStatus === 'operational') {
-    overallStatusText.textContent = '🟢 所有系统与服务运行正常 (All Systems Operational)';
+    overallStatusText.textContent = '🟢 所有系统与服务运行正常';
   } else if (data.overallStatus === 'degraded') {
-    overallStatusText.textContent = '🟡 部分系统响应延迟较高 (Degraded Performance)';
+    overallStatusText.textContent = '🟡 部分服务响应延迟';
   } else {
-    overallStatusText.textContent = '🔴 部分系统发生故障 (Service Disruption)';
+    overallStatusText.textContent = '🔴 部分服务发生故障';
   }
 
   document.getElementById('lastCheckTime').textContent = `最后更新: ${new Date(data.updatedAt || Date.now()).toLocaleTimeString('zh-CN')}`;

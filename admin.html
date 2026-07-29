@@ -55,7 +55,7 @@
     }
     .section-title {
       font-family: var(--font-heading);
-      font-size: 1.1rem;
+      font-size: 1.05rem;
       color: var(--color-accent);
       margin: 1.5rem 0 1rem 0;
       padding-bottom: 0.5rem;
@@ -71,10 +71,10 @@
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      background: rgba(255,255,255,0.05);
+      background: var(--bg-btn-secondary);
       padding: 0.4rem 0.8rem;
       border-radius: 6px;
-      border: 1px solid var(--border-card);
+      border: 1px solid var(--border-card-bright);
       cursor: pointer;
     }
     .checkbox-item input[type="checkbox"] {
@@ -94,6 +94,12 @@
       justify-content: space-between;
       margin-bottom: 0.75rem;
     }
+    .sub-hint {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+      display: block;
+    }
   </style>
 </head>
 <body>
@@ -109,17 +115,17 @@
         </div>
         <form onsubmit="handleLogin(event)">
           <div class="form-group">
-            <label>用户名 (Username)</label>
+            <label>用户名</label>
             <input type="text" id="loginUsername" placeholder="默认: admin" required>
           </div>
           <div class="form-group">
-            <label>密码 (Password)</label>
+            <label>密码</label>
             <input type="password" id="loginPassword" placeholder="默认: admin" required>
           </div>
           
-          <!-- 2FA Input (Shown when 2FA is enabled) -->
+          <!-- 2FA Input -->
           <div class="form-group" id="totpGroup" style="display: none;">
-            <label style="color: var(--color-accent);">🛡️ 2FA 双因素验证码 (6位数)</label>
+            <label style="color: var(--color-accent);">🛡️ 2FA 双因素验证码</label>
             <input type="text" id="loginTotpCode" placeholder="输入身份验证器 6 位数字">
           </div>
 
@@ -132,7 +138,7 @@
           
           <div style="margin-top: 1rem; text-align: center;">
             <button type="button" class="btn-secondary" style="width: 100%;" onclick="loginWithPasskey()">
-              🔑 使用 Passkey 零密码登录 (Bitwarden / 触控ID)
+              🔑 使用 Passkey 零密码登录
             </button>
           </div>
         </form>
@@ -145,37 +151,37 @@
         <div class="brand">
           <div class="brand-logo">⚡</div>
           <div class="brand-info">
-            <h1 id="appTitle">EdgePulse 后台控制中心</h1>
-            <p id="currentUserBadge">当前登录账号: admin</p>
+            <h1 id="appTitle">EdgePulse 控制台</h1>
+            <p id="currentUserBadge">当前账号: admin</p>
           </div>
         </div>
         <div class="header-controls">
           <button class="refresh-btn" id="themeBtn" onclick="toggleTheme()" title="切换主题">
             <span id="themeBtnIcon">🌙</span>
           </button>
-          <button class="logout-btn" onclick="handleLogout()"><span>🚪 退出登录</span></button>
+          <button class="logout-btn" onclick="handleLogout()"><span>🚪 退出</span></button>
         </div>
       </header>
 
       <div class="admin-card">
         <div class="tab-nav">
-          <div class="tab-item active" onclick="switchTab('sites')">📍 监控节点列表</div>
-          <div class="tab-item" onclick="switchTab('addSite')">➕ 添加监控节点</div>
+          <div class="tab-item active" onclick="switchTab('sites')">📍 监控节点</div>
+          <div class="tab-item" onclick="switchTab('addSite')">➕ 添加节点</div>
           <div class="tab-item" onclick="switchTab('settings')">⚙️ 设置</div>
         </div>
 
         <!-- Tab 1: Sites List -->
         <div id="tab-sites">
-          <h3>已建立的监控节点</h3>
+          <h3>已建节点</h3>
           <table class="site-table">
             <thead>
               <tr>
                 <th>节点名称</th>
-                <th>类型与层级</th>
-                <th>目标 URL / IP / 域名</th>
+                <th>类型</th>
+                <th>目标地址</th>
                 <th>分组</th>
                 <th>到期监控规则</th>
-                <th>绑定的告警渠道</th>
+                <th>告警渠道</th>
                 <th>操作</th>
               </tr>
             </thead>
@@ -187,28 +193,28 @@
 
         <!-- Tab 2: Add Site -->
         <div id="tab-addSite" style="display: none;">
-          <h3>添加新监控节点</h3>
+          <h3>添加监控节点</h3>
           <form onsubmit="handleCreateSite(event)">
             <div class="form-group">
-              <label>监控类型 (Type)</label>
+              <label>监控类型</label>
               <select id="newSiteType" onchange="toggleAdminFormFields()">
-                <option value="http">HTTP(S) 网站 / API (默认轻量 HEAD 请求)</option>
-                <option value="icmp">ICMP PING 探针 (屏蔽端口 VPS)</option>
-                <option value="tcp">TCP 端口检测 (如 22, 3306, 6379)</option>
-                <option value="push">Push 被动心跳打卡 (Dead Man)</option>
+                <option value="http">HTTP(S) 网站 / API</option>
+                <option value="icmp">ICMP PING 探针</option>
+                <option value="tcp">TCP 端口检测</option>
+                <option value="push">Push 被动打卡</option>
               </select>
             </div>
             <div class="form-group">
-              <label>节点名称 (Name)</label>
-              <input type="text" id="newSiteName" placeholder="例如: 我的主站 / 香港 VPS" required>
+              <label>节点名称</label>
+              <input type="text" id="newSiteName" placeholder="例如: 我的主站" required>
             </div>
             <div class="form-group" id="adminUrlGroup">
               <label>目标 URL</label>
-              <input type="url" id="newSiteUrl" placeholder="https://example.com 或 https://demo.example.com" oninput="onUrlOrHostInput()">
+              <input type="url" id="newSiteUrl" placeholder="https://example.com" oninput="onUrlOrHostInput()">
             </div>
             <div class="form-group" id="adminHostGroup" style="display: none;">
               <label>目标 IP / Host</label>
-              <input type="text" id="newSiteHost" placeholder="例如: 1.2.3.4 或 db.example.com">
+              <input type="text" id="newSiteHost" placeholder="1.2.3.4 或 db.example.com">
             </div>
 
             <!-- Intelligent Expiry Monitor Panel -->
@@ -220,7 +226,7 @@
                 <label class="kumo-switch" id="chkDomainItem">
                   <input type="checkbox" id="chkEnableDomainExpiry" checked>
                   <span class="kumo-switch-track"><span class="kumo-switch-thumb"></span></span>
-                  <span>🌐 监控域名到期时间 (根域名专用)</span>
+                  <span>🌐 监控域名到期时间</span>
                 </label>
                 <label class="kumo-switch" id="chkSslItem">
                   <input type="checkbox" id="chkEnableSslExpiry" checked>
@@ -233,33 +239,33 @@
                 <div>
                   <label style="font-size: 0.8rem; color: var(--text-secondary);">到期检查频率</label>
                   <select id="expiryFrequency">
-                    <option value="daily">Daily 每天检查一次</option>
-                    <option value="weekly">Weekly 每周检查一次</option>
-                    <option value="monthly">Monthly 每月检查一次</option>
+                    <option value="daily">Daily 每天</option>
+                    <option value="weekly">Weekly 每周</option>
+                    <option value="monthly">Monthly 每月</option>
                   </select>
                 </div>
                 <div id="domainWarnDaysGroup">
-                  <label style="font-size: 0.8rem; color: var(--text-secondary);">域名提前提醒 (天)</label>
+                  <label style="font-size: 0.8rem; color: var(--text-secondary);">域名提前提醒天数</label>
                   <input type="number" id="domainWarnDays" value="30" placeholder="默认 30 天">
                 </div>
                 <div id="sslWarnDaysGroup">
-                  <label style="font-size: 0.8rem; color: var(--text-secondary);">SSL 提前提醒 (天)</label>
+                  <label style="font-size: 0.8rem; color: var(--text-secondary);">SSL 提前提醒天数</label>
                   <input type="number" id="sslWarnDays" value="30" placeholder="默认 30 天">
                 </div>
               </div>
             </div>
 
             <div class="form-group" style="margin-top: 1rem;">
-              <label>所属分组 (Group)</label>
+              <label>所属分组</label>
               <div style="display: flex; gap: 0.5rem; align-items: center;">
                 <select id="newSiteGroupSelect" style="flex: 1;" onchange="onGroupSelectChange()">
                   <!-- Dynamically filled + option to create new group -->
                 </select>
-                <input type="text" id="newSiteCustomGroupInput" placeholder="输入全新分组名称" style="display: none; flex: 1;">
+                <input type="text" id="newSiteCustomGroupInput" placeholder="输入新分组名称" style="display: none; flex: 1;">
               </div>
             </div>
             <div class="form-group">
-              <label>选择绑定的告警通知服务 (可选，仅展示已显式开启的通知服务)</label>
+              <label>告警通知服务</label>
               <div class="checkbox-group" id="availableAlertChannels">
                 <!-- Dynamically filled -->
               </div>
@@ -271,60 +277,61 @@
         <!-- Tab 3: Settings -->
         <div id="tab-settings" style="display: none;">
           <form onsubmit="handleSaveSettings(event)">
-            <!-- 0. Site General Info (Title & Favicon - First position) -->
-            <div class="section-title">🌐 站点基本信息配置</div>
+            <!-- 0. Site General Info -->
+            <div class="section-title">🌐 站点信息</div>
             <div class="channel-box">
               <div class="form-group">
-                <label>站点标题 (Title)</label>
-                <input type="text" id="settingTitle" placeholder="例如: EdgePulse 运维监控系统 (留空默认 EdgePulse)">
+                <label>站点标题</label>
+                <input type="text" id="settingTitle" placeholder="EdgePulse">
               </div>
               <div class="form-group" style="margin-bottom: 0;">
-                <label>Favicon 图标 (支持输入在线图片 URL，或上传本地图片转 Data:Image 保存到 KV)</label>
-                <div style="display: flex; gap: 0.75rem; align-items: center;">
-                  <input type="text" id="settingFavicon" placeholder="输入图片 URL 或选择右侧文件上传" style="flex: 1;" oninput="updateFaviconPreview()">
+                <label>Favicon 图标</label>
+                <span class="sub-hint">支持输入在线图片 URL 或上传本地图片转换为 Base64 保存</span>
+                <div style="display: flex; gap: 0.75rem; align-items: center; margin-top: 0.4rem;">
+                  <input type="text" id="settingFavicon" placeholder="图片 URL 或选择右侧上传" style="flex: 1;" oninput="updateFaviconPreview()">
                   <input type="file" id="settingFaviconFile" accept="image/*" style="width: auto;" onchange="handleFaviconUpload(event)">
                   <img id="faviconPreviewImg" style="width: 32px; height: 32px; border-radius: 6px; border: 1px solid var(--border-card); display: none; object-fit: contain;">
                 </div>
               </div>
             </div>
 
-            <!-- 1. Notification Channels with Switch directly in Title -->
-            <div class="section-title">🔔 告警通知渠道设置</div>
+            <!-- 1. Notification Channels -->
+            <div class="section-title">🔔 告警通知渠道</div>
 
-            <!-- Lark / 飞书 -->
+            <!-- Lark -->
             <div class="channel-box">
               <div class="channel-header">
                 <label class="kumo-switch" style="font-weight: 600; color: var(--text-primary);">
                   <input type="checkbox" id="chkLarkEnabled">
                   <span class="kumo-switch-track"><span class="kumo-switch-thumb"></span></span>
-                  <span>🟦 飞书 (Lark) 自定义机器人</span>
+                  <span>🟦 飞书机器人</span>
                 </label>
               </div>
-              <input type="url" id="settingLark" placeholder="https://open.feishu.cn/open-apis/bot/v2/hook/xxx">
+              <input type="url" id="settingLark" placeholder="Webhook URL">
             </div>
 
-            <!-- WeChat / 企业微信 -->
+            <!-- WeChat -->
             <div class="channel-box">
               <div class="channel-header">
                 <label class="kumo-switch" style="font-weight: 600; color: var(--text-primary);">
                   <input type="checkbox" id="chkWechatEnabled">
                   <span class="kumo-switch-track"><span class="kumo-switch-thumb"></span></span>
-                  <span>🟩 企业微信 Webhook</span>
+                  <span>🟩 企业微信</span>
                 </label>
               </div>
-              <input type="url" id="settingWechat" placeholder="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=xxx">
+              <input type="url" id="settingWechat" placeholder="Webhook URL">
             </div>
 
-            <!-- DingTalk / 钉钉 -->
+            <!-- DingTalk -->
             <div class="channel-box">
               <div class="channel-header">
                 <label class="kumo-switch" style="font-weight: 600; color: var(--text-primary);">
                   <input type="checkbox" id="chkDingtalkEnabled">
                   <span class="kumo-switch-track"><span class="kumo-switch-thumb"></span></span>
-                  <span>🍊 钉钉 (DingTalk) 机器人</span>
+                  <span>🍊 钉钉机器人</span>
                 </label>
               </div>
-              <input type="url" id="settingDingtalk" placeholder="https://oapi.dingtalk.com/robot/send?access_token=xxx">
+              <input type="url" id="settingDingtalk" placeholder="Webhook URL">
             </div>
 
             <!-- Telegram -->
@@ -333,34 +340,34 @@
                 <label class="kumo-switch" style="font-weight: 600; color: var(--text-primary);">
                   <input type="checkbox" id="chkTelegramEnabled">
                   <span class="kumo-switch-track"><span class="kumo-switch-thumb"></span></span>
-                  <span>✈️ Telegram Bot</span>
+                  <span>✈️ Telegram</span>
                 </label>
               </div>
-              <input type="text" id="settingTelegram" placeholder="格式: TOKEN|CHAT_ID (例如 123456:ABC-DEF|987654321)">
+              <input type="text" id="settingTelegram" placeholder="TOKEN|CHAT_ID">
             </div>
 
-            <!-- Bark (iOS) -->
+            <!-- Bark -->
             <div class="channel-box">
               <div class="channel-header">
                 <label class="kumo-switch" style="font-weight: 600; color: var(--text-primary);">
                   <input type="checkbox" id="chkBarkEnabled">
                   <span class="kumo-switch-track"><span class="kumo-switch-thumb"></span></span>
-                  <span>📱 Bark 推送 (iOS)</span>
+                  <span>📱 Bark</span>
                 </label>
               </div>
-              <input type="url" id="settingBark" placeholder="https://api.day.app/your_token">
+              <input type="url" id="settingBark" placeholder="Bark URL">
             </div>
 
-            <!-- PushPlus (推送加) -->
+            <!-- PushPlus -->
             <div class="channel-box">
               <div class="channel-header">
                 <label class="kumo-switch" style="font-weight: 600; color: var(--text-primary);">
                   <input type="checkbox" id="chkPushplusEnabled">
                   <span class="kumo-switch-track"><span class="kumo-switch-thumb"></span></span>
-                  <span>🟢 PushPlus (推送加微信公众号推送)</span>
+                  <span>🟢 PushPlus</span>
                 </label>
               </div>
-              <input type="text" id="settingPushplus" placeholder="输入 PushPlus Token (在 pushplus.plus 获取)">
+              <input type="text" id="settingPushplus" placeholder="PushPlus Token">
             </div>
             
             <!-- Email / SMTP -->
@@ -369,124 +376,125 @@
                 <label class="kumo-switch" style="font-weight: 600; color: var(--color-accent);">
                   <input type="checkbox" id="chkEmailEnabled">
                   <span class="kumo-switch-track"><span class="kumo-switch-thumb"></span></span>
-                  <span>✉️ Email 邮件通知设置 (SMTP)</span>
+                  <span>✉️ Email 邮件</span>
                 </label>
               </div>
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.5rem;">
                 <div>
-                  <label style="font-size: 0.8rem; color: var(--text-secondary);">SMTP 服务器 (Host)</label>
-                  <input type="text" id="settingSmtpHost" placeholder="如 smtp.qq.com 或 smtp.gmail.com">
+                  <label style="font-size: 0.8rem; color: var(--text-secondary);">SMTP 服务器</label>
+                  <input type="text" id="settingSmtpHost" placeholder="smtp.qq.com">
                 </div>
                 <div>
-                  <label style="font-size: 0.8rem; color: var(--text-secondary);">SMTP 端口 (Port)</label>
-                  <input type="number" id="settingSmtpPort" placeholder="默认 465 或 587" value="465">
+                  <label style="font-size: 0.8rem; color: var(--text-secondary);">SMTP 端口</label>
+                  <input type="number" id="settingSmtpPort" placeholder="465" value="465">
                 </div>
                 <div>
-                  <label style="font-size: 0.8rem; color: var(--text-secondary);">发件人账号 (SMTP User)</label>
-                  <input type="text" id="settingSmtpUser" placeholder="例如: your-email@qq.com">
+                  <label style="font-size: 0.8rem; color: var(--text-secondary);">发件人账号</label>
+                  <input type="text" id="settingSmtpUser" placeholder="email@example.com">
                 </div>
                 <div>
-                  <label style="font-size: 0.8rem; color: var(--text-secondary);">发件人密码/授权码 (Pass)</label>
-                  <input type="password" id="settingSmtpPass" placeholder="邮箱授权码或应用密码">
+                  <label style="font-size: 0.8rem; color: var(--text-secondary);">发件人密码/授权码</label>
+                  <input type="password" id="settingSmtpPass" placeholder="授权码">
                 </div>
                 <div>
-                  <label style="font-size: 0.8rem; color: var(--text-secondary);">发件人显示名称/邮箱 (From Sender)</label>
-                  <input type="text" id="settingSmtpFrom" placeholder="例如: EdgePulse 告警 <no-reply@example.com>">
+                  <label style="font-size: 0.8rem; color: var(--text-secondary);">发件人显示名称</label>
+                  <input type="text" id="settingSmtpFrom" placeholder="EdgePulse 告警 <no-reply@example.com>">
                 </div>
                 <div>
-                  <label style="font-size: 0.8rem; color: var(--text-secondary);">接收告警的邮箱地址 (Receiver Email)</label>
-                  <input type="email" id="settingEmailReceiver" placeholder="接收故障/恢复通知的邮箱地址">
+                  <label style="font-size: 0.8rem; color: var(--text-secondary);">接收邮箱</label>
+                  <input type="email" id="settingEmailReceiver" placeholder="receiver@example.com">
                 </div>
               </div>
             </div>
 
             <!-- 2. Group Management -->
-            <div class="section-title">📂 监控分组管理</div>
+            <div class="section-title">📂 监控分组</div>
             <div class="form-group">
-              <label>当前已有分组列表 (点击标签上的 ✕ 按钮可删除该分组)</label>
-              <div class="checkbox-group" id="groupTagContainer" style="margin-bottom: 0.75rem;">
+              <label>已有分组</label>
+              <span class="sub-hint">点击标签上的 ✕ 即可删除分组</span>
+              <div class="checkbox-group" id="groupTagContainer" style="margin: 0.5rem 0 0.75rem 0;">
                 <!-- Dynamically rendered group tags -->
               </div>
               <div style="display: flex; gap: 0.5rem;">
-                <input type="text" id="newGroupInput" placeholder="输入新分组名称 (例如: 数据库节点)" style="flex: 1;" onkeypress="if(event.key === 'Enter'){ event.preventDefault(); addNewGroupTag(); }">
+                <input type="text" id="newGroupInput" placeholder="新分组名称" style="flex: 1;" onkeypress="if(event.key === 'Enter'){ event.preventDefault(); addNewGroupTag(); }">
                 <button type="button" class="btn-secondary" onclick="addNewGroupTag()">➕ 添加分组</button>
               </div>
             </div>
 
-            <!-- 3. Password Modification with Confirmation -->
-            <div class="section-title">🔑 修改管理员账号与密码</div>
+            <!-- 3. Password Modification -->
+            <div class="section-title">🔑 管理员账号密码</div>
             <div class="form-group">
-              <label>当前旧密码 (修改账号密码时必填)</label>
-              <input type="password" id="settingOldPassword" placeholder="无需修改账号密码请留空">
+              <label>当前旧密码</label>
+              <span class="sub-hint">修改账号密码时必填</span>
+              <input type="password" id="settingOldPassword" placeholder="修改时填入" style="margin-top: 0.3rem;">
             </div>
             <div class="form-group">
-              <label>新用户名 (Username)</label>
-              <input type="text" id="settingNewUsername" placeholder="留空则保持当前用户名">
+              <label>新用户名</label>
+              <input type="text" id="settingNewUsername" placeholder="保持不变请留空">
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
               <div class="form-group">
-                <label>新密码 (New Password)</label>
-                <input type="password" id="settingNewPassword" placeholder="无需修改密码请留空">
+                <label>新密码</label>
+                <input type="password" id="settingNewPassword" placeholder="保持不变请留空">
               </div>
               <div class="form-group">
-                <label>确认新密码 (Confirm New Password)</label>
-                <input type="password" id="settingConfirmNewPassword" placeholder="重新输入一遍新密码">
+                <label>确认新密码</label>
+                <input type="password" id="settingConfirmNewPassword" placeholder="再次输入新密码">
               </div>
             </div>
 
-            <!-- 4. Passkey WebAuthn Security -->
-            <div class="section-title">🔑 Passkey 硬件密钥无密码登录 (Bitwarden / 触控ID)</div>
+            <!-- 4. Passkey -->
+            <div class="section-title">🔑 Passkey 硬件密钥</div>
             <div class="channel-box">
               <div class="channel-header">
-                <label style="font-weight: 600; color: var(--text-primary);">已绑定的 Passkey 设备凭据</label>
+                <label style="font-weight: 600; color: var(--text-primary);">绑定的凭据</label>
                 <button type="button" class="btn-primary" onclick="registerPasskey()">➕ 注册当前设备 Passkey</button>
               </div>
-              <p style="font-size: 0.85rem; color: var(--text-muted);" id="passkeyStatusText">
-                注册后，登录时可通过 Bitwarden 插件弹窗、TouchID、FaceID 或 YubiKey 直接完成免密无感登录。
-              </p>
+              <span class="sub-hint" id="passkeyStatusText">
+                支持 Bitwarden 插件、TouchID、FaceID 或 YubiKey 硬件免密登录
+              </span>
             </div>
 
-            <!-- 5. 2FA TOTP Security -->
-            <div class="section-title">🛡️ 2FA 双因素身份验证 (TOTP)</div>
+            <!-- 5. 2FA TOTP -->
+            <div class="section-title">🛡️ 2FA 双因素验证</div>
             <div class="channel-box">
               <div class="channel-header">
                 <label class="kumo-switch" style="font-weight: 600; color: var(--text-primary);">
                   <input type="checkbox" id="chkTotpEnabled">
                   <span class="kumo-switch-track"><span class="kumo-switch-thumb"></span></span>
-                  <span>身份验证器 (Google Authenticator / Bitwarden 2FA)</span>
+                  <span>身份验证器</span>
                 </label>
               </div>
               <div class="form-group" style="margin-top: 0.75rem;">
-                <label>TOTP 动态密钥 (Secret Key)</label>
-                <input type="text" id="settingTotpSecret" placeholder="生成或填入 16 位 Base32 TOTP 密钥">
+                <label>TOTP 动态密钥</label>
+                <input type="text" id="settingTotpSecret" placeholder="16 位 Base32 密钥">
               </div>
             </div>
 
-            <!-- 6. Cloudflare Turnstile Security -->
-            <div class="section-title">🤖 Cloudflare Turnstile 人机验证 (默认关闭)</div>
+            <!-- 6. Cloudflare Turnstile -->
+            <div class="section-title">🤖 Turnstile 人机验证</div>
             <div class="channel-box">
               <div class="channel-header">
                 <label class="kumo-switch" style="font-weight: 600; color: var(--text-primary);">
                   <input type="checkbox" id="chkTurnstileEnabled">
                   <span class="kumo-switch-track"><span class="kumo-switch-thumb"></span></span>
-                  <span>Turnstile 隐形人机防护</span>
+                  <span>Turnstile 隐形防护</span>
                 </label>
               </div>
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.75rem;">
                 <div>
-                  <label style="font-size: 0.8rem; color: var(--text-secondary);">Site Key (站点 Key)</label>
-                  <input type="text" id="settingTurnstileSiteKey" placeholder="例如: 0x4AAAAAAAXxxxx">
+                  <label style="font-size: 0.8rem; color: var(--text-secondary);">Site Key</label>
+                  <input type="text" id="settingTurnstileSiteKey" placeholder="0x4AAAAAAAXxxxx">
                 </div>
                 <div>
-                  <label style="font-size: 0.8rem; color: var(--text-secondary);">Secret Key (密钥)</label>
-                  <input type="password" id="settingTurnstileSecretKey" placeholder="例如: 0x4AAAAAAAXxxxx">
+                  <label style="font-size: 0.8rem; color: var(--text-secondary);">Secret Key</label>
+                  <input type="password" id="settingTurnstileSecretKey" placeholder="0x4AAAAAAAXxxxx">
                 </div>
               </div>
-              <div style="background: rgba(246, 130, 31, 0.08); padding: 0.75rem; border-radius: 6px; border: 1px solid var(--color-accent); margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-secondary);">
-                💡 <strong>Cloudflare 官方 Dev Site Keys 测试秘钥支持：</strong><br>
-                • <code>1x00000000000000000000AA</code> (开发测试 - 总是自动通过验证)<br>
-                • <code>2x00000000000000000000AB</code> (开发测试 - 总是拦截拒绝)<br>
-                • <code>3x00000000000000000000FF</code> (开发测试 - 强制弹出交互式 Challenge 验证)
+              <div style="background: rgba(246, 130, 31, 0.08); padding: 0.75rem; border-radius: 6px; border: 1px solid var(--color-accent); margin-top: 0.75rem;">
+                <span class="sub-hint">
+                  💡 官方 Dev Key 支持：<code>1x00000000000000000000AA</code> (测试放行) | <code>2x00000000000000000000AB</code> (拦截)
+                </span>
               </div>
             </div>
 
@@ -495,18 +503,18 @@
             <div class="channel-box">
               <div class="form-group" style="margin-bottom: 0;">
                 <label>ICP 备案号</label>
-                <input type="text" id="settingIcp" placeholder="例如: 粤ICP备12345678号-1 或 沪ICP备87654321号">
+                <input type="text" id="settingIcp" placeholder="粤ICP备12345678号-1">
               </div>
             </div>
 
-            <!-- 8. Backup & Restore & High-Risk Purge Reset -->
-            <div class="section-title">📦 配置备份与导入恢复</div>
+            <!-- 8. Backup & Restore -->
+            <div class="section-title">📦 配置备份与恢复</div>
             <div class="channel-box">
               <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-                <button type="button" class="btn-secondary" onclick="exportConfigJson()">📥 导出配置 JSON 备份文件</button>
+                <button type="button" class="btn-secondary" onclick="exportConfigJson()">📥 导出 JSON 备份</button>
                 <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">
                   <input type="file" id="importJsonFile" accept=".json">
-                  <button type="button" class="btn-primary" onclick="importConfigJson()">📤 校验并恢复导入</button>
+                  <button type="button" class="btn-primary" onclick="importConfigJson()">📤 恢复导入</button>
                 </div>
                 <button type="button" class="btn-secondary" style="color: var(--color-red); border-color: rgba(239, 68, 68, 0.4);" onclick="openResetPasswordModal()">⚠️ 重置</button>
               </div>
@@ -521,24 +529,25 @@
     </div>
   </div>
 
-  <!-- Reset Password & Warning Modal -->
+  <!-- Reset Password Modal -->
   <div class="kumo-dialog-overlay" id="resetPasswordOverlay">
     <div class="kumo-dialog-card" style="max-width: 460px;">
-      <div class="kumo-dialog-title" style="color: var(--color-red); font-size: 1.15rem;">⚠️ 高危重置：清空系统 KV 存储数据</div>
+      <div class="kumo-dialog-title" style="color: var(--color-red); font-size: 1.15rem;">⚠️ 高危重置：清空数据</div>
       <div class="kumo-dialog-body">
-        <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 0.85rem; margin-bottom: 1.25rem; font-size: 0.85rem; color: var(--text-primary); line-height: 1.5;">
-          <strong>警告：此操作不可逆！</strong><br>
-          将彻底清空当前关联的 EdgeOne KV 数据库（包含所有已添加的监控节点、告警服务、自定义分组及站点设置），并将系统恢复至初始空状态。
+        <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 0.85rem; margin-bottom: 1.25rem;">
+          <span class="sub-hint" style="color: var(--text-primary); font-size: 0.85rem;">
+            <strong>警告：此操作不可逆！</strong>彻底清空存储数据库（节点、告警及设置），恢复至初始空状态。
+          </span>
         </div>
 
         <div class="form-group" style="margin-bottom: 0;">
-          <label style="color: var(--text-primary); font-weight: 600;">请输入当前管理员密码以确认重置：</label>
-          <input type="password" id="resetConfirmPasswordInput" placeholder="输入当前管理员密码" style="width: 100%;">
+          <label style="color: var(--text-primary); font-weight: 600;">请输入管理员密码确认重置：</label>
+          <input type="password" id="resetConfirmPasswordInput" placeholder="输入当前管理员密码" style="width: 100%; margin-top: 0.3rem;">
         </div>
       </div>
       <div class="kumo-dialog-actions">
         <button type="button" class="btn-secondary" onclick="closeResetPasswordModal()">取消</button>
-        <button type="button" class="btn-primary" style="background: var(--color-red);" onclick="executeResetWithPassword()">确认清空并重置</button>
+        <button type="button" class="btn-primary" style="background: var(--color-red);" onclick="executeResetWithPassword()">确认重置</button>
       </div>
     </div>
   </div>
