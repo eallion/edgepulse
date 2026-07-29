@@ -41,8 +41,9 @@
     └── api/
         ├── status.js            # [Edge Function] 状态查询与 24h 历史线图 API (支持多域名感知)
         ├── cron.js              # [Edge Function] 核心心跳巡检与多渠道 Webhook 告警引擎
-        ├── config.js            # [Edge Function] 监控站点与多域名配置 CRUD API
-        ├── auth.js              # [Edge Function] 账号密码鉴权与密码修改 API (默认 admin/admin)
+        ├── auth/
+        │   ├── login.js         # [Edge Function] 管理员登录校验 API
+        │   └── change-password.js # [Edge Function] 密码修改 API
         ├── push.js              # [Edge Function] VPS / 备份脚本被动心跳打卡 API
         └── icmp-ping.js         # [Cloud Function] 屏蔽端口 VPS 的 ICMP Ping / TCP Port 探针
 ```
