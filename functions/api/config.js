@@ -130,6 +130,14 @@ async function handleConfig(context) {
       if (kv) {
         await kv.put('config', JSON.stringify(globalThis.__EDGEPULSE_CONFIG__));
         await kv.put('config:auth', JSON.stringify(authData));
+        if (body.pages && Array.isArray(body.pages)) {
+          for (const page of body.pages) {
+            if (page.domain) {
+              await kv.put(`page:${page.id}`, JSON.stringify(page));
+              await kv.put(`domain:${page.domain.trim()}`, JSON.stringify({ pageId: page.id }));
+            }
+          }
+        }
         if (body.domains && Array.isArray(body.domains)) {
           for (const item of body.domains) {
             await kv.put(`domain:${item.host}`, JSON.stringify({ pageId: item.pageId }));

@@ -362,7 +362,7 @@ function handleLogout() {
 }
 
 function switchTab(tabName) {
-  const tabs = ['sites', 'addSite', 'settings'];
+  const tabs = ['sites', 'addSite', 'pages', 'settings'];
   tabs.forEach(t => {
     const tabEl = document.getElementById(`tab-${t}`);
     if (tabEl) tabEl.style.display = t === tabName ? 'block' : 'none';
@@ -372,6 +372,153 @@ function switchTab(tabName) {
   tabItems.forEach((el, idx) => {
     if (el) el.classList.toggle('active', tabs[idx] === tabName);
   });
+
+  if (tabName === 'pages') {
+    renderPagesTab();
+  }
+}
+
+/* Multi-Domain Custom Status Pages Controllers */
+function renderPagesTab() {
+  renderPageSitesCheckboxes();
+  renderPagesTable(cachedConfig.pages || []);
+}
+
+function renderPageSitesCheckboxes(selectedSiteIds = []) {
+  const container = document.getElementById('pageSitesCheckboxContainer');
+  if (!container) return;
+  const sites = cachedConfig.sites || [];
+  if (sites.length === 0) {
+    container.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem;">暂无可用节点，请先在【📍 监控节点】中创建节点</span>';
+    return;
+  }
+
+  container.innerHTML = sites.map(s => {
+    const checked = selectedSiteIds.includes(s.id) ? 'checked' : '';
+    return `
+      <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; cursor: pointer; color: var(--text-primary);">
+        <input type="checkbox" class="page-site-checkbox" value="${s.id}" ${checked}>
+        <span>${s.name} <small style="color: var(--text-muted);">(${s.type.toUpperCase()})</small></span>
+      </label>
+    `;
+  }).join('');
+}
+
+function renderPagesTable(pages) {
+  const tbody = document.getElementById('pagesTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  if (!pages || pages.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">暂无独立监控页，默认均使用全局统一看板</td></tr>';
+    return;
+  }
+
+  pages.forEach((page, idx) => {
+    const tr = document.createElement('tr');
+    const sitesCount = (page.siteIds && page.siteIds.length > 0) ? `${page.siteIds.length} 个节点` : '全部节点';
+    tr.innerHTML = `
+      <td style="white-space: nowrap;"><strong>${page.domain || '-'}</strong></td>
+      <td style="white-space: nowrap;">${page.name || '-'}</td>
+      <td style="white-space: nowrap;">${page.title || '<span style="color: var(--text-muted);">(继承全局)</span>'}</td>
+      <td style="white-space: nowrap;">${sitesCount}</td>
+      <td style="white-space: nowrap;">
+        <button class="btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; margin-right: 0.3rem;" onclick="editCustomPage(${idx})">编辑</button>
+        <button class="btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; color: var(--color-red);" onclick="deleteCustomPage(${idx})">删除</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+async function handleSaveCustomPage() {
+  const domain = document.getElementById('pageDomainInput').value.trim();
+  const name = document.getElementById('pageNameInput').value.trim();
+  const title = document.getElementById('pageTitleConfigInput').value.trim();
+  const announcement = document.getElementById('pageAnnouncementInput').value.trim();
+  const editingId = document.getElementById('pageEditingId').value;
+
+  if (!domain) {
+    showToast('请输入绑定的自定义域名', 'error', '表单验证失败');
+    return;
+  }
+
+  const selectedSiteIds = Array.from(document.querySelectorAll('.page-site-checkbox:checked')).map(cb => cb.value);
+
+  if (!cachedConfig.pages) cachedConfig.pages = [];
+
+  if (editingId) {
+    const index = cachedConfig.pages.findIndex(p => p.id === editingId);
+    if (index !== -1) {
+      cachedConfig.pages[index] = {
+        ...cachedConfig.pages[index],
+        domain,
+        name: name || domain,
+        title,
+        announcement,
+        siteIds: selectedSiteIds,
+      };
+    }
+  } else {
+    const newPage = {
+      id: 'page-' + Date.now(),
+      domain,
+      name: name || domain,
+      title,
+      announcement,
+      siteIds: selectedSiteIds,
+    };
+    cachedConfig.pages.push(newPage);
+  }
+
+  const token = localStorage.getItem('edgepulse_admin_token') || 'dev_authenticated_token';
+  await saveConfig(cachedConfig, token, '独立监控页保存成功！');
+  resetPageForm();
+  renderPagesTab();
+}
+
+function editCustomPage(index) {
+  const pages = cachedConfig.pages || [];
+  const page = pages[index];
+  if (!page) return;
+
+  document.getElementById('pageEditorTitle').textContent = '✏️ 编辑监控页';
+  document.getElementById('pageEditingId').value = page.id;
+  document.getElementById('pageDomainInput').value = page.domain || '';
+  document.getElementById('pageNameInput').value = page.name || '';
+  document.getElementById('pageTitleConfigInput').value = page.title || '';
+  document.getElementById('pageAnnouncementInput').value = page.announcement || '';
+  document.getElementById('cancelEditPageBtn').style.display = 'inline-block';
+
+  renderPageSitesCheckboxes(page.siteIds || []);
+}
+
+function deleteCustomPage(index) {
+  showKumoConfirm({
+    title: '🗑️ 确认删除监控页',
+    message: '删除后该自定义域名将自动降级使用全局状态看板，是否确定删除？',
+    confirmText: '确认删除',
+    onConfirm: async () => {
+      if (cachedConfig.pages && cachedConfig.pages[index]) {
+        cachedConfig.pages.splice(index, 1);
+        const token = localStorage.getItem('edgepulse_admin_token') || 'dev_authenticated_token';
+        await saveConfig(cachedConfig, token, '监控页已成功删除！');
+        resetPageForm();
+        renderPagesTab();
+      }
+    }
+  });
+}
+
+function resetPageForm() {
+  document.getElementById('pageEditorTitle').textContent = '➕ 创建独立监控页';
+  document.getElementById('pageEditingId').value = '';
+  document.getElementById('pageDomainInput').value = '';
+  document.getElementById('pageNameInput').value = '';
+  document.getElementById('pageTitleConfigInput').value = '';
+  document.getElementById('pageAnnouncementInput').value = '';
+  document.getElementById('cancelEditPageBtn').style.display = 'none';
+  renderPageSitesCheckboxes([]);
 }
 
 function toggleAdminFormFields() {

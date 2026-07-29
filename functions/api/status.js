@@ -59,12 +59,20 @@ async function handleStatusRequest(context) {
         sites: getMockSites(),
       };
 
-      pageConfig = {
+      const matchedPage = (globalConfig.pages || []).find(p => p.domain && p.domain.toLowerCase() === host.toLowerCase());
+
+      pageConfig = matchedPage || {
         title: globalConfig.title || 'EdgePulse Status',
         logo: globalConfig.logo || '',
         announcement: globalConfig.announcement || '',
       };
-      sites = globalConfig.sites && globalConfig.sites.length > 0 ? globalConfig.sites : getMockSites();
+
+      const allSites = globalConfig.sites && globalConfig.sites.length > 0 ? globalConfig.sites : getMockSites();
+      if (pageConfig.siteIds && pageConfig.siteIds.length > 0) {
+        sites = allSites.filter(s => pageConfig.siteIds.includes(s.id));
+      } else {
+        sites = allSites;
+      }
     }
 
     // Process site metrics
