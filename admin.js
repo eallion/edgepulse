@@ -18,23 +18,18 @@ function initTheme() {
 
 function toggleTheme() {
   const current = document.documentElement.getAttribute('data-theme') || 'dimmed';
-  const themeMap = { dimmed: 'light', light: 'dark', dark: 'dimmed' };
-  const nextTheme = themeMap[current] || 'dimmed';
+  const nextTheme = current === 'light' ? 'dimmed' : 'light';
   applyTheme(nextTheme);
 }
 
 function applyTheme(theme) {
-  document.documentElement.setAttribute('data-theme', theme);
-  localStorage.setItem('edgepulse_theme', theme);
+  const finalTheme = theme === 'light' ? 'light' : 'dimmed';
+  document.documentElement.setAttribute('data-theme', finalTheme);
+  localStorage.setItem('edgepulse_theme', finalTheme);
 
   const iconEl = document.getElementById('themeBtnIcon');
   if (iconEl) {
-    const labels = {
-      dimmed: '🌙',
-      light: '☀️',
-      dark: '🖤',
-    };
-    iconEl.textContent = labels[theme] || '🌙';
+    iconEl.textContent = finalTheme === 'light' ? '☀️' : '🌙';
   }
 }
 
