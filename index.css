@@ -507,6 +507,39 @@ textarea:focus {
   background: var(--bg-card-hover);
 }
 
+/* Cloudflare Kumo UI File Input Styling */
+input[type="file"] {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-kumo, 8px);
+  padding: 0.35rem 0.5rem;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+input[type="file"]::file-selector-button {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-card-bright);
+  color: var(--text-primary);
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-right: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+input[type="file"]::file-selector-button:hover {
+  background: var(--color-accent);
+  color: #ffffff;
+  border-color: var(--color-accent);
+}
+
 /* Select dropdown options styling */
 select option {
   background-color: var(--bg-card);
