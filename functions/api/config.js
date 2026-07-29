@@ -6,7 +6,7 @@
 // Initialize globalThis singleton storage for local dev server
 if (!globalThis.__EDGEPULSE_CONFIG__) {
   globalThis.__EDGEPULSE_CONFIG__ = {
-    title: 'EdgePulse System Status',
+    title: 'EdgePulse Status',
     favicon: '',
     icp: '',
     sites: [
@@ -90,7 +90,7 @@ async function handleConfig(context) {
 
         // Reset globalThis fallback
         globalThis.__EDGEPULSE_CONFIG__ = {
-          title: 'EdgePulse System Status',
+          title: 'EdgePulse Status',
           favicon: '',
           icp: '',
           sites: [],

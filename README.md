@@ -1,6 +1,6 @@
-# ⚡ EdgePulse - EdgeOne Makers 原生在线监控与状态页系统
+# ⚡ EdgePulse - EdgeOne Makers 原生在线监控与状态页
 
-**EdgePulse** 是一个完全基于 **Tencent EdgeOne Makers** 边缘计算平台构建的高颜值、零服务器维护成本（0 元/极低成本）、全球多节点在线监控与 Status Page 系统。
+**EdgePulse** 是一个完全基于 **Tencent EdgeOne Makers** 边缘计算平台构建的高颜值、零服务器维护成本（0 元/极低成本）、全球多节点在线监控与 Status Page。
 
 ---
 

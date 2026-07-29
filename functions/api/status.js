@@ -37,7 +37,7 @@ async function handleStatusRequest(context) {
       if (!pageConfig) {
         pageConfig = await kv.get('page:default', 'json') || {
           id: 'default',
-          title: globalConfig?.title || 'EdgePulse System Status',
+          title: globalConfig?.title || 'EdgePulse Status',
           logo: globalConfig?.logo || '',
           announcement: globalConfig?.announcement || '',
           siteIds: [],
@@ -55,12 +55,12 @@ async function handleStatusRequest(context) {
     } else {
       // Dev server fallback: read from globalThis singleton
       globalConfig = globalThis.__EDGEPULSE_CONFIG__ || {
-        title: 'EdgePulse System Status',
+        title: 'EdgePulse Status',
         sites: getMockSites(),
       };
 
       pageConfig = {
-        title: globalConfig.title || 'EdgePulse System Status',
+        title: globalConfig.title || 'EdgePulse Status',
         logo: globalConfig.logo || '',
         announcement: globalConfig.announcement || '',
       };
@@ -86,7 +86,7 @@ async function handleStatusRequest(context) {
     }
 
     const payload = {
-      title: pageConfig.title || globalConfig?.title || 'EdgePulse System Status',
+      title: pageConfig.title || globalConfig?.title || 'EdgePulse Status',
       logo: pageConfig.logo || '',
       announcement: pageConfig.announcement || '',
       icp: globalConfig?.icp || '',

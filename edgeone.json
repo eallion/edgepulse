@@ -1,7 +1,7 @@
 {
   "name": "edgepulse",
   "version": "1.0.0",
-  "description": "Native Serverless Online Monitoring & Status Page System for EdgeOne Makers",
+  "description": "Native Serverless Online Monitoring & Status Page for EdgeOne Makers",
   "framework": "static",
   "routes": [
     {
