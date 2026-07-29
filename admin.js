@@ -220,7 +220,7 @@ function getChannelLabel(key) {
   return map[key] || key;
 }
 
-let activeGroupsList = ['核心服务', '网站节点', 'VPS 服务器', '域名资产'];
+let activeGroupsList = ['default'];
 
 function fillSettingsForm(config) {
   const alerts = config.alerts || {};
@@ -240,7 +240,7 @@ function fillSettingsForm(config) {
     if (alerts.email.receiver) document.getElementById('settingEmailReceiver').value = alerts.email.receiver;
   }
 
-  activeGroupsList = config.groups || ['核心服务', '网站节点', 'VPS 服务器', '域名资产'];
+  activeGroupsList = config.groups && config.groups.length > 0 ? config.groups : ['default'];
   renderGroupTags();
 }
 
@@ -313,14 +313,16 @@ function updateAvailableChannelsAndGroups(config) {
   }
 
   const groupSelect = document.getElementById('newSiteGroupSelect');
-  groupSelect.innerHTML = '';
-  const groups = config.groups || ['核心服务', '网站节点', 'VPS 服务器', '域名资产'];
-  groups.forEach(g => {
-    const opt = document.createElement('option');
-    opt.value = g.trim();
-    opt.textContent = g.trim();
-    groupSelect.appendChild(opt);
-  });
+  if (groupSelect) {
+    groupSelect.innerHTML = '';
+    const groups = config.groups && config.groups.length > 0 ? config.groups : ['default'];
+    groups.forEach(g => {
+      const opt = document.createElement('option');
+      opt.value = g.trim();
+      opt.textContent = g.trim();
+      groupSelect.appendChild(opt);
+    });
+  }
 }
 
 async function handleCreateSite(event) {
