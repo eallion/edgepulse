@@ -177,7 +177,7 @@ header {
   border: 1px solid var(--border-card) !important;
   background: var(--bg-card);
   border-radius: 9999px !important;
-  padding: 0.45rem;
+  padding: 0.25rem;
   width: 36px;
   height: 36px;
   display: inline-flex;
@@ -185,6 +185,13 @@ header {
   justify-content: center;
   color: var(--text-primary);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+#themeBtn svg {
+  width: 1.45rem !important;
+  height: 1.45rem !important;
+  display: block;
 }
 
 #themeBtn:hover {
