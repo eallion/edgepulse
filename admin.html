@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EdgePulse - 控制台管理后台</title>
+  <link rel="stylesheet" href="index.css">
+  <style>
+    .admin-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 16px;
+      padding: 2rem;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+    .login-container {
+      max-width: 420px;
+      margin: 4rem auto;
+    }
+    .tab-nav {
+      display: flex;
+      gap: 1rem;
+      border-bottom: 1px solid var(--border-card);
+      margin-bottom: 2rem;
+    }
+    .tab-item {
+      padding: 0.75rem 1.25rem;
+      cursor: pointer;
+      color: var(--text-secondary);
+      font-weight: 500;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    .tab-item.active {
+      color: var(--color-accent);
+      border-bottom-color: var(--color-accent);
+    }
+    .site-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    .site-table th, .site-table td {
+      padding: 0.85rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border-card);
+    }
+    .site-table th {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 1. Login View -->
+    <div id="loginView" class="login-container">
+      <div class="admin-card">
+        <div class="brand" style="margin-bottom: 1.5rem; justify-content: center;">
+          <div class="brand-logo">⚡</div>
+          <div class="brand-info">
+            <h1>EdgePulse 管理登录</h1>
+          </div>
+        </div>
+        <form onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label>用户名 (Username)</label>
+            <input type="text" id="loginUsername" placeholder="默认: admin" required>
+          </div>
+          <div class="form-group">
+            <label>密码 (Password)</label>
+            <input type="password" id="loginPassword" placeholder="默认: admin" required>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">提示：首次使用默认账号密码为 admin / admin</p>
+          <button type="submit" class="btn-primary" style="width: 100%;">登录后台</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- 2. Dashboard View -->
+    <div id="dashboardView" style="display: none;">
+      <header>
+        <div class="brand">
+          <div class="brand-logo">⚡</div>
+          <div class="brand-info">
+            <h1>EdgePulse 后台控制中心</h1>
+            <p id="currentUserBadge">当前登录账号: admin</p>
+          </div>
+        </div>
+        <div class="header-controls">
+          <button class="refresh-btn" onclick="handleLogout()"><span>🚪 退出登录</span></button>
+        </div>
+      </header>
+
+      <div class="admin-card">
+        <div class="tab-nav">
+          <div class="tab-item active" onclick="switchTab('sites')">📍 监控节点列表</div>
+          <div class="tab-item" onclick="switchTab('addSite')">➕ 添加监控节点</div>
+          <div class="tab-item" onclick="switchTab('alerts')">🔔 告警通道设置</div>
+          <div class="tab-item" onclick="switchTab('security')">🔑 修改账号密码</div>
+        </div>
+
+        <!-- Tab 1: Sites List -->
+        <div id="tab-sites">
+          <h3>已建立的监控节点</h3>
+          <table class="site-table">
+            <thead>
+              <tr>
+                <th>节点名称</th>
+                <th>类型</th>
+                <th>目标 URL / IP / 域名</th>
+                <th>分组</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="sitesTableBody">
+              <!-- Dynamically Filled -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Tab 2: Add Site -->
+        <div id="tab-addSite" style="display: none;">
+          <h3>添加新监控节点</h3>
+          <form onsubmit="handleCreateSite(event)">
+            <div class="form-group">
+              <label>监控类型 (Type)</label>
+              <select id="newSiteType" onchange="toggleAdminFormFields()">
+                <option value="http">HTTP(S) 网站 / API (默认轻量 HEAD 请求)</option>
+                <option value="icmp">ICMP PING 探针 (屏蔽端口 VPS)</option>
+                <option value="tcp">TCP 端口检测 (如 22, 3306, 6379)</option>
+                <option value="domain">域名到期监控 (WHOIS/RDAP)</option>
+                <option value="push">Push 被动心跳打卡 (Dead Man)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>节点名称 (Name)</label>
+              <input type="text" id="newSiteName" placeholder="例如: 我的主站 / 香港 VPS" required>
+            </div>
+            <div class="form-group" id="adminUrlGroup">
+              <label>目标 URL</label>
+              <input type="url" id="newSiteUrl" placeholder="https://example.com">
+            </div>
+            <div class="form-group" id="adminHostGroup" style="display: none;">
+              <label>目标 IP / Host</label>
+              <input type="text" id="newSiteHost" placeholder="例如: 1.2.3.4">
+            </div>
+            <div class="form-group" id="adminDomainGroup" style="display: none;">
+              <label>域名 (Domain)</label>
+              <input type="text" id="newSiteDomain" placeholder="例如: eallion.com">
+            </div>
+            <div class="form-group">
+              <label>分组名称 (Group)</label>
+              <input type="text" id="newSiteGroup" value="核心服务" required>
+            </div>
+            <button type="submit" class="btn-primary">确认添加节点</button>
+          </form>
+        </div>
+
+        <!-- Tab 3: Alerts -->
+        <div id="tab-alerts" style="display: none;">
+          <h3>多渠道告警配置</h3>
+          <form onsubmit="handleSaveAlerts(event)">
+            <div class="form-group">
+              <label>飞书 (Lark) 自定义机器人 Webhook</label>
+              <input type="url" id="alertLark" placeholder="https://open.feishu.cn/open-apis/bot/v2/hook/xxx">
+            </div>
+            <div class="form-group">
+              <label>企业微信 Webhook</label>
+              <input type="url" id="alertWechat" placeholder="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=xxx">
+            </div>
+            <div class="form-group">
+              <label>Telegram Bot Token</label>
+              <input type="text" id="alertTgToken" placeholder="例如: 123456:ABC-DEF">
+            </div>
+            <div class="form-group">
+              <label>Telegram Chat ID</label>
+              <input type="text" id="alertTgChatId" placeholder="例如: 987654321">
+            </div>
+            <div class="form-group">
+              <label>Bark 推送地址 (iOS)</label>
+              <input type="url" id="alertBark" placeholder="https://api.day.app/your_token">
+            </div>
+            <button type="submit" class="btn-primary">保存告警配置</button>
+          </form>
+        </div>
+
+        <!-- Tab 4: Security (Password Change) -->
+        <div id="tab-security" style="display: none;">
+          <h3>修改管理员账号与密码</h3>
+          <form onsubmit="handleChangePassword(event)">
+            <div class="form-group">
+              <label>当前旧密码 (Old Password)</label>
+              <input type="password" id="secOldPassword" required>
+            </div>
+            <div class="form-group">
+              <label>新用户名 (New Username)</label>
+              <input type="text" id="secNewUsername" placeholder="默认留空则不修改用户名">
+            </div>
+            <div class="form-group">
+              <label>新密码 (New Password)</label>
+              <input type="password" id="secNewPassword" required>
+            </div>
+            <button type="submit" class="btn-primary">保存新账号密码</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+</html>

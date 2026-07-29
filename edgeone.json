@@ -5,8 +5,16 @@
   "framework": "static",
   "routes": [
     {
+      "src": "^/api/auth/(.*)$",
+      "dest": "/functions/api/auth"
+    },
+    {
       "src": "^/api/(.*)$",
       "dest": "/functions/api/$1"
+    },
+    {
+      "src": "^/admin$",
+      "dest": "/admin.html"
     },
     {
       "src": "^/$",

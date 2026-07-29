@@ -23,9 +23,6 @@
           <span>🔄 刷新</span>
           <span id="countdownText">(30s)</span>
         </button>
-        <button class="refresh-btn" id="adminBtn" onclick="openAdminModal()">
-          <span>⚙️ 管理监控</span>
-        </button>
       </div>
     </header>
 
@@ -61,66 +58,9 @@
       <!-- Dynamic Service Cards Rendered by JS -->
     </main>
 
-    <!-- Admin Modal -->
-    <div class="modal-overlay" id="adminModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>⚙️ 管理与添加监控节点</h3>
-          <button class="close-btn" onclick="closeAdminModal()">✕</button>
-        </div>
-        <form id="addSiteForm" onsubmit="handleSaveSite(event)">
-          <div class="form-group">
-            <label>监控类型 (Type)</label>
-            <select id="siteType" onchange="toggleSiteFormFields()">
-              <option value="http">HTTP(S) 网站 / API (默认 HEAD/GET)</option>
-              <option value="icmp">ICMP PING 探针 (屏蔽端口 VPS)</option>
-              <option value="tcp">TCP 端口检测 (如 22, 3306, 6379)</option>
-              <option value="domain">域名到期到期监控 (WHOIS/RDAP)</option>
-              <option value="push">Push 被动心跳打卡 (Dead Man)</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>节点名称 (Name)</label>
-            <input type="text" id="siteName" placeholder="例如: 我的主站 / 香港 VPS" required>
-          </div>
-
-          <div class="form-group" id="urlGroup">
-            <label>目标 URL / 网址</label>
-            <input type="url" id="siteUrl" placeholder="https://example.com">
-          </div>
-
-          <div class="form-group" id="hostGroup" style="display: none;">
-            <label>目标 IP / 主机名 (Host)</label>
-            <input type="text" id="siteHost" placeholder="例如: 1.2.3.4 或 db.example.com">
-          </div>
-
-          <div class="form-group" id="domainGroup" style="display: none;">
-            <label>域名 (Domain)</label>
-            <input type="text" id="siteDomain" placeholder="例如: eallion.com">
-          </div>
-
-          <div class="form-group">
-            <label>分组名称 (Group)</label>
-            <input type="text" id="siteGroup" placeholder="例如: 核心服务 / 服务器节点" value="默认分组">
-          </div>
-
-          <div class="form-group">
-            <label>管理秘钥 (Admin Key)</label>
-            <input type="password" id="adminKey" placeholder="默认秘钥: edgepulse-secret-key" required>
-          </div>
-
-          <div class="modal-footer">
-            <button type="button" class="btn-secondary" onclick="closeAdminModal()">取消</button>
-            <button type="submit" class="btn-primary">保存监控节点</button>
-          </div>
-        </form>
-      </div>
-    </div>
-
     <!-- Footer -->
     <footer>
-      <p>Powered by ⚡ <strong>EdgePulse</strong> on <a href="https://cloud.tencent.com/document/product/1552/127365" target="_blank" rel="noopener">Tencent EdgeOne Makers</a></p>
+      <p>Powered by ⚡ <strong>EdgePulse</strong> on <a href="https://cloud.tencent.com/document/product/1552/127365" target="_blank" rel="noopener">Tencent EdgeOne Makers</a> | <a href="/admin.html" style="color: var(--text-muted); text-decoration: none;">管理后台</a></p>
     </footer>
   </div>
 

@@ -30,9 +30,11 @@
 ```
 .
 ├── .gitignore                   # Git 忽略文件规则
-├── index.html                   # 静态监控面板 UI
+├── index.html                   # 静态监控面板 UI (前台纯粹展示)
 ├── index.css                    # Glassmorphism 样式系统与 Token
 ├── index.js                     # 状态页数据交互与图表渲染
+├── admin.html                   # 控制台管理后台 (登录与节点/告警/密码管理)
+├── admin.js                     # 后台控制逻辑与鉴权控制器
 ├── edgeone.json                 # EdgeOne Makers 平台配置文件
 ├── README.md                    # 项目使用与部署说明文档
 └── functions/
@@ -40,9 +42,20 @@
         ├── status.js            # [Edge Function] 状态查询与 24h 历史线图 API (支持多域名感知)
         ├── cron.js              # [Edge Function] 核心心跳巡检与多渠道 Webhook 告警引擎
         ├── config.js            # [Edge Function] 监控站点与多域名配置 CRUD API
+        ├── auth.js              # [Edge Function] 账号密码鉴权与密码修改 API (默认 admin/admin)
         ├── push.js              # [Edge Function] VPS / 备份脚本被动心跳打卡 API
         └── icmp-ping.js         # [Cloud Function] 屏蔽端口 VPS 的 ICMP Ping / TCP Port 探针
 ```
+
+---
+
+## 🔐 独立管理后台与默认登录凭据
+
+- **管理后台入口**：`/admin.html`（或 `/admin`）
+- **默认初始账号**：`admin`
+- **默认初始密码**：`admin`
+
+*可以在后台【🔑 修改账号密码】面板中输入旧密码后随时更新为自定义的新用户名与新密码，修改后存储于 EdgeOne KV (`config:auth`) 中。*
 
 ---
 
