@@ -1,7 +1,7 @@
 /**
  * EdgeOne Edge Function: /api/status
  * Serves current status, uptime SLA %, and 24h history metrics to the frontend UI.
- * Supports Multi-Domain matching via request Host header and fallback for dev server persistence.
+ * Connects seamlessly to globalThis singleton for local dev server persistence.
  */
 
 export async function onRequest(context) {
@@ -25,30 +25,27 @@ async function handleStatusRequest(context) {
     let statusMap = {};
 
     if (kv) {
-      // 1. Fetch main configuration
+      // 1. Fetch main configuration from KV
       globalConfig = await kv.get('config', 'json');
 
-      // 2. Multi-domain lookup: check if current Host header is mapped to a specific page group
+      // 2. Multi-domain lookup
       const domainMapping = await kv.get(`domain:${host}`, 'json');
       if (domainMapping && domainMapping.pageId) {
         pageConfig = await kv.get(`page:${domainMapping.pageId}`, 'json');
       }
 
-      // If no domain mapping, fallback to default page config or global config
       if (!pageConfig) {
         pageConfig = await kv.get('page:default', 'json') || {
           id: 'default',
           title: globalConfig?.title || 'EdgePulse System Status',
           logo: globalConfig?.logo || '',
           announcement: globalConfig?.announcement || '',
-          siteIds: [], // Empty means show all
+          siteIds: [],
         };
       }
 
-      // 3. Fetch latest status snapshot
       statusMap = (await kv.get('status:snapshot', 'json')) || {};
       
-      // 4. Filter sites belonging to this status page
       const allSites = globalConfig?.sites || getMockSites();
       if (pageConfig.siteIds && pageConfig.siteIds.length > 0) {
         sites = allSites.filter(s => pageConfig.siteIds.includes(s.id));
@@ -56,20 +53,18 @@ async function handleStatusRequest(context) {
         sites = allSites;
       }
     } else {
-      // Local dev server fallback: try fetching /api/config internally
-      try {
-        const internalConfigRes = await fetch(new URL('/api/config', url.origin).toString());
-        if (internalConfigRes.ok) {
-          globalConfig = await internalConfigRes.json();
-        }
-      } catch (e) {}
+      // Dev server fallback: read from globalThis singleton
+      globalConfig = globalThis.__EDGEPULSE_CONFIG__ || {
+        title: 'EdgePulse System Status',
+        sites: getMockSites(),
+      };
 
       pageConfig = {
-        title: globalConfig?.title || 'EdgePulse System Status',
-        logo: globalConfig?.logo || '',
-        announcement: globalConfig?.announcement || '',
+        title: globalConfig.title || 'EdgePulse System Status',
+        logo: globalConfig.logo || '',
+        announcement: globalConfig.announcement || '',
       };
-      sites = globalConfig?.sites || getMockSites();
+      sites = globalConfig.sites && globalConfig.sites.length > 0 ? globalConfig.sites : getMockSites();
     }
 
     // Process site metrics

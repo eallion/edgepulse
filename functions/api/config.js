@@ -1,17 +1,23 @@
 /**
  * EdgeOne Edge Function: /api/config
- * Configuration Management API for Sites, Multi-Domain Status Pages, Webhook Alert channels.
- * Supports RESET operation with password verification and KV store purging.
+ * Configuration Management API with globalThis cross-isolate persistence for dev server.
  */
 
-let inMemoryConfig = {
-  title: 'EdgePulse System Status',
-  favicon: '',
-  icp: '',
-  sites: [],
-  alerts: {},
-  groups: ['default'],
-};
+// Initialize globalThis singleton storage for local dev server
+if (!globalThis.__EDGEPULSE_CONFIG__) {
+  globalThis.__EDGEPULSE_CONFIG__ = {
+    title: 'EdgePulse System Status',
+    favicon: '',
+    icp: '',
+    sites: [
+      { id: 'site-1', name: '官网主站 (Main Web)', type: 'http', url: 'https://demo.eallion.com', group: 'default', checkDomain: true, checkSsl: true },
+      { id: 'site-2', name: 'API 网关服务', type: 'http', url: 'https://demo.eallion.com/api/status', group: 'default', checkDomain: false, checkSsl: true },
+      { id: 'site-3', name: '香港 VPS 探针', type: 'icmp', host: '1.1.1.1', group: 'default', checkDomain: false, checkSsl: false }
+    ],
+    alerts: {},
+    groups: ['default'],
+  };
+}
 
 export async function onRequest(context) {
   return handleConfig(context);
@@ -55,9 +61,9 @@ async function handleConfig(context) {
     if (request.method === 'GET') {
       let config = kv ? await kv.get('config', 'json') : null;
       if (!config) {
-        config = inMemoryConfig;
+        config = globalThis.__EDGEPULSE_CONFIG__;
       } else {
-        inMemoryConfig = config;
+        globalThis.__EDGEPULSE_CONFIG__ = config;
       }
 
       return new Response(JSON.stringify(config), {
@@ -82,8 +88,8 @@ async function handleConfig(context) {
           });
         }
 
-        // Reset memory fallback
-        inMemoryConfig = {
+        // Reset globalThis fallback
+        globalThis.__EDGEPULSE_CONFIG__ = {
           title: 'EdgePulse System Status',
           favicon: '',
           icp: '',
@@ -92,26 +98,25 @@ async function handleConfig(context) {
           groups: ['default'],
         };
 
-        // Purge KV storage keys
         if (kv) {
           await kv.delete('config');
           await kv.delete('status:snapshot');
         }
 
-        return new Response(JSON.stringify({ success: true, message: '系统 KV 存储数据已彻底重置清空' }), {
+        return new Response(JSON.stringify({ success: true, message: '系统 KV 存储数据已彻底重置清空', config: globalThis.__EDGEPULSE_CONFIG__ }), {
           status: 200,
           headers: corsHeaders,
         });
       }
 
-      // Normal config save/update
-      inMemoryConfig = {
-        ...inMemoryConfig,
+      // Normal config save/update: merge into globalThis
+      globalThis.__EDGEPULSE_CONFIG__ = {
+        ...globalThis.__EDGEPULSE_CONFIG__,
         ...body,
       };
 
       if (kv) {
-        await kv.put('config', JSON.stringify(inMemoryConfig));
+        await kv.put('config', JSON.stringify(globalThis.__EDGEPULSE_CONFIG__));
         if (body.domains && Array.isArray(body.domains)) {
           for (const item of body.domains) {
             await kv.put(`domain:${item.host}`, JSON.stringify({ pageId: item.pageId }));
@@ -119,7 +124,7 @@ async function handleConfig(context) {
         }
       }
 
-      return new Response(JSON.stringify({ success: true, message: 'Configuration saved successfully', config: inMemoryConfig }), {
+      return new Response(JSON.stringify({ success: true, message: 'Configuration saved successfully', config: globalThis.__EDGEPULSE_CONFIG__ }), {
         status: 200,
         headers: corsHeaders,
       });
