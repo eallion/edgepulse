@@ -51,30 +51,43 @@ export async function onRequest(context) {
             errorMsg = `Push heartbeat missed (> ${pushTimeoutSec}s)`;
           }
         } else if (site.type === 'http' || site.type === 'https' || !site.type) {
-          // HTTP / HTTPS Detection (Defaults to HEAD for ultra-lightweight probes)
+          // HTTP / HTTPS Detection with Auto-Fallback from HEAD to GET for 545/405/5xx statuses
+          let requestMethod = site.method || (site.keyword ? 'GET' : 'HEAD');
+          let res = null;
+
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), site.timeout || 5000);
 
-          // Use HEAD by default to save server bandwidth & memory, fallback to GET if keyword check is requested
-          const requestMethod = site.method || (site.keyword ? 'GET' : 'HEAD');
+          try {
+            res = await fetch(site.url, {
+              method: requestMethod,
+              headers: site.headers || { 'User-Agent': 'EdgePulse-Monitor/1.0' },
+              body: requestMethod !== 'HEAD' && requestMethod !== 'GET' ? site.body : undefined,
+              signal: controller.signal,
+            });
 
-          const res = await fetch(site.url, {
-            method: requestMethod,
-            headers: site.headers || { 'User-Agent': 'EdgePulse-Monitor/1.0' },
-            body: requestMethod !== 'HEAD' && requestMethod !== 'GET' ? site.body : undefined,
-            signal: controller.signal,
-          });
+            // If HEAD request returned 405 Method Not Allowed or 545 / 5xx Edge Origin Error, fallback retry with GET
+            if (requestMethod === 'HEAD' && (res.status === 405 || res.status === 545 || res.status >= 500)) {
+              requestMethod = 'GET';
+              res = await fetch(site.url, {
+                method: 'GET',
+                headers: site.headers || { 'User-Agent': 'EdgePulse-Monitor/1.0' },
+                signal: controller.signal,
+              });
+            }
+          } finally {
+            clearTimeout(timeoutId);
+          }
 
-          clearTimeout(timeoutId);
           latency = Date.now() - startTime;
 
           // Check Status Code (default 200-399)
           const expectedStatus = site.expectedStatus || 200;
-          const statusOk = res.status === expectedStatus || (res.status >= 200 && res.status < 400);
+          const statusOk = res && (res.status === expectedStatus || (res.status >= 200 && res.status < 400));
 
           if (!statusOk) {
             status = 'down';
-            errorMsg = `HTTP Status ${res.status}`;
+            errorMsg = res ? `HTTP Status ${res.status}` : 'No Response';
           } else {
             status = 'up';
             // Check Keyword if configured
