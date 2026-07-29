@@ -542,8 +542,17 @@ function fillSettingsForm(config) {
   const alerts = config.alerts || {};
   
   // Security Toggles
-  document.getElementById('chkTotpEnabled').checked = !!config.totpEnabled;
-  if (config.totpSecret) document.getElementById('settingTotpSecret').value = config.totpSecret;
+  const totpChk = document.getElementById('chkTotpEnabled');
+  totpChk.checked = !!config.totpEnabled;
+  if (config.totpSecret) {
+    document.getElementById('settingTotpSecret').value = config.totpSecret;
+  }
+  totpChk.onchange = function() {
+    if (this.checked && !document.getElementById('settingTotpSecret').value.trim()) {
+      document.getElementById('settingTotpSecret').value = generateBase32Secret();
+      showToast('已为您自动生成 2FA 动态秘钥，请在身份验证器中绑定', 'info', '2FA 设置');
+    }
+  };
 
   document.getElementById('chkTurnstileEnabled').checked = !!config.turnstileEnabled;
   if (config.turnstileSiteKey) document.getElementById('settingTurnstileSiteKey').value = config.turnstileSiteKey;
@@ -977,4 +986,13 @@ async function saveConfig(configPayload, token, successMsg) {
     renderSitesTable(cachedConfig.sites || []);
     updateAvailableChannelsAndGroups(cachedConfig);
   }
+}
+
+function generateBase32Secret() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+  let result = '';
+  for (let i = 0; i < 16; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
 }

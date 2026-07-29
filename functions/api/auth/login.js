@@ -1,6 +1,6 @@
 /**
  * EdgeOne Edge Function: /api/auth/login
- * Handles Admin Login with optional 2FA TOTP and Cloudflare Turnstile Verification.
+ * Handles Admin Login with RFC 6238 TOTP 2FA & Cloudflare Turnstile Verification.
  */
 
 export async function onRequest(context) {
@@ -33,8 +33,32 @@ async function handleLogin(context) {
     const totpCode = (body.totpCode || '').trim();
     const turnstileToken = (body.turnstileToken || '').trim();
 
-    let authConfig = kv ? await kv.get('config:auth', 'json') : null;
-    if (!authConfig || !authConfig.username) {
+    // Fetch auth config from KV or globalThis
+    let authConfig = null;
+    if (kv) {
+      authConfig = await kv.get('config:auth', 'json');
+      if (!authConfig) {
+        const globalConfig = await kv.get('config', 'json');
+        if (globalConfig) {
+          authConfig = {
+            username: globalConfig.username || 'admin',
+            password: globalConfig.password || 'admin',
+            totpEnabled: !!globalConfig.totpEnabled,
+            totpSecret: globalConfig.totpSecret || '',
+            turnstileEnabled: !!globalConfig.turnstileEnabled,
+            turnstileSiteKey: globalConfig.turnstileSiteKey || '',
+            turnstileSecretKey: globalConfig.turnstileSecretKey || '',
+          };
+        }
+      }
+    } else {
+      authConfig = globalThis.__EDGEPULSE_AUTH_CONFIG__ || globalThis.__EDGEPULSE_CONFIG__ || {
+        username: 'admin',
+        password: 'admin',
+      };
+    }
+
+    if (!authConfig) {
       authConfig = { username: 'admin', password: 'admin' };
     }
 
@@ -47,13 +71,11 @@ async function handleLogin(context) {
         });
       }
 
-      // Check for Cloudflare Dev Site Key Pass-through
       if (authConfig.turnstileSiteKey === '1x00000000000000000000AA') {
-        // Always pass dev site key
+        // Always pass dev key
       } else if (authConfig.turnstileSiteKey === '2x00000000000000000000AB') {
         return new Response(JSON.stringify({ error: 'Dev Key 人机验证拦截强行失败测试' }), { status: 400 });
       } else {
-        // Verify with Cloudflare Turnstile Siteverify API
         const verifyRes = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -93,9 +115,13 @@ async function handleLogin(context) {
           headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
         });
       }
-      // Simple verification check
-      if (authConfig.totpSecret && totpCode !== '123456') { // Mock check fallback
-        // Verify TOTP if secret exists
+
+      const isValid = await verifyTotpCode(authConfig.totpSecret, totpCode);
+      if (!isValid) {
+        return new Response(JSON.stringify({ error: '2FA 验证码错误或已过期，请重新输入', requireTotp: true }), {
+          status: 401,
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        });
       }
     }
 
@@ -121,4 +147,67 @@ async function handleLogin(context) {
       },
     });
   }
+}
+
+// RFC 6238 Base32 Decoder
+function base32Decode(str) {
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+  let bits = 0;
+  let value = 0;
+  let output = [];
+
+  const cleaned = (str || '').replace(/=+$/, '').toUpperCase().replace(/[^A-Z2-7]/g, '');
+  for (let i = 0; i < cleaned.length; i++) {
+    const val = alphabet.indexOf(cleaned.charAt(i));
+    if (val === -1) continue;
+    value = (value << 5) | val;
+    bits += 5;
+    if (bits >= 8) {
+      output.push((value >>> (bits - 8)) & 255);
+      bits -= 8;
+    }
+  }
+  return new Uint8Array(output);
+}
+
+// RFC 6238 TOTP HMAC-SHA1 Validation (30s window)
+async function verifyTotpCode(secret, userCode) {
+  if (!secret || !userCode || userCode.length !== 6) return false;
+  const keyBytes = base32Decode(secret);
+  if (keyBytes.length === 0) return false;
+
+  const epoch = Math.floor(Date.now() / 1000);
+  const timeStep = 30;
+  const currentCounter = Math.floor(epoch / timeStep);
+
+  for (let offset = -1; offset <= 1; offset++) {
+    const counter = currentCounter + offset;
+    const buffer = new ArrayBuffer(8);
+    const view = new DataView(buffer);
+    view.setUint32(4, counter, false);
+
+    const cryptoKey = await crypto.subtle.importKey(
+      'raw',
+      keyBytes,
+      { name: 'HMAC', hash: 'SHA-1' },
+      false,
+      ['sign']
+    );
+
+    const signature = await crypto.subtle.sign('HMAC', cryptoKey, buffer);
+    const sigBytes = new Uint8Array(signature);
+    const offsetByte = sigBytes[sigBytes.length - 1] & 0xf;
+    const binary =
+      ((sigBytes[offsetByte] & 0x7f) << 24) |
+      ((sigBytes[offsetByte + 1] & 0xff) << 16) |
+      ((sigBytes[offsetByte + 2] & 0xff) << 8) |
+      (sigBytes[offsetByte + 3] & 0xff);
+
+    const generatedCode = (binary % 1000000).toString().padStart(6, '0');
+    if (generatedCode === userCode.trim()) {
+      return true;
+    }
+  }
+
+  return false;
 }

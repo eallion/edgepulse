@@ -115,8 +115,21 @@ async function handleConfig(context) {
         ...body,
       };
 
+      const authData = {
+        username: globalThis.__EDGEPULSE_AUTH_CONFIG__?.username || 'admin',
+        password: globalThis.__EDGEPULSE_AUTH_CONFIG__?.password || 'admin',
+        totpEnabled: !!body.totpEnabled,
+        totpSecret: body.totpSecret || '',
+        turnstileEnabled: !!body.turnstileEnabled,
+        turnstileSiteKey: body.turnstileSiteKey || '',
+        turnstileSecretKey: body.turnstileSecretKey || '',
+      };
+
+      globalThis.__EDGEPULSE_AUTH_CONFIG__ = authData;
+
       if (kv) {
         await kv.put('config', JSON.stringify(globalThis.__EDGEPULSE_CONFIG__));
+        await kv.put('config:auth', JSON.stringify(authData));
         if (body.domains && Array.isArray(body.domains)) {
           for (const item of body.domains) {
             await kv.put(`domain:${item.host}`, JSON.stringify({ pageId: item.pageId }));
