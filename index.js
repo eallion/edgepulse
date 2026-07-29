@@ -3,6 +3,7 @@
  * Fetches status API, renders Uptime Bars, Sparkline mini charts, SSL & Domain Expiry tags.
  */
 
+let defaultRefreshInterval = 30;
 let countdownSeconds = 30;
 let timerId = null;
 
@@ -11,6 +12,15 @@ document.addEventListener('DOMContentLoaded', () => {
   fetchStatus();
   startCountdown();
 });
+
+function formatCountdownText(sec) {
+  if (sec >= 60) {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return s > 0 ? `${m}m ${s}s` : `${m}m`;
+  }
+  return `${sec}s`;
+}
 
 /* Theme Manager: Dimmed (Default), Light */
 function initTheme() {
@@ -46,8 +56,9 @@ async function fetchStatus() {
   try {
     const res = await fetch('/api/status');
     const data = await res.json();
+    defaultRefreshInterval = data.refreshInterval || 30;
     renderPage(data);
-    countdownSeconds = 30; // Reset countdown
+    countdownSeconds = defaultRefreshInterval;
   } catch (err) {
     console.error('Failed to fetch status:', err);
   } finally {
@@ -64,7 +75,7 @@ function startCountdown() {
   timerId = setInterval(() => {
     countdownSeconds--;
     const countdownEl = document.getElementById('countdownText');
-    if (countdownEl) countdownEl.textContent = `刷新 (${countdownSeconds}s)`;
+    if (countdownEl) countdownEl.textContent = `刷新 (${formatCountdownText(countdownSeconds)})`;
 
     if (countdownSeconds <= 0) {
       fetchStatus();
