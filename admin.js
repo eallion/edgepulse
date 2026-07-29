@@ -1,7 +1,7 @@
 /**
  * EdgePulse Admin Dashboard Logic
- * Handles Authentication, Passkey (WebAuthn / Bitwarden), 2FA TOTP, Cloudflare Turnstile (Dev Site Keys),
- * Consolidated Settings, JSON Backup Export & Strict Import Validation, and Node CRUD.
+ * Powered by Cloudflare Kumo UI / Base UI Tokens.
+ * Features Kumo Toast Notification & Kumo Confirm Dialog (Replacing native alert & confirm).
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -34,6 +34,80 @@ function applyTheme(theme) {
   if (iconEl) {
     iconEl.innerHTML = finalTheme === 'light' ? SUN_SVG : MOON_SVG;
   }
+}
+
+/* Kumo UI Toast Notification Component */
+function showToast(message, type = 'info', title = '') {
+  let container = document.querySelector('.kumo-toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.className = 'kumo-toast-container';
+    document.body.appendChild(container);
+  }
+
+  const iconMap = {
+    success: '🟢',
+    error: '🔴',
+    info: '🍊',
+    warning: '🟡',
+  };
+
+  const toast = document.createElement('div');
+  toast.className = `kumo-toast ${type}`;
+  toast.innerHTML = `
+    <div class="kumo-toast-icon">${iconMap[type] || '🍊'}</div>
+    <div class="kumo-toast-content">
+      ${title ? `<div class="kumo-toast-title">${title}</div>` : ''}
+      <div>${message}</div>
+    </div>
+    <div class="kumo-toast-close" onclick="this.parentElement.remove()">✕</div>
+  `;
+
+  container.appendChild(toast);
+  setTimeout(() => toast.classList.add('show'), 10);
+
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
+}
+
+/* Kumo UI Confirm Dialog Component */
+function showConfirm(title, message) {
+  return new Promise((resolve) => {
+    let overlay = document.querySelector('.kumo-dialog-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.className = 'kumo-dialog-overlay';
+      document.body.appendChild(overlay);
+    }
+
+    overlay.innerHTML = `
+      <div class="kumo-dialog-card">
+        <div class="kumo-dialog-title">${title}</div>
+        <div class="kumo-dialog-body">${message}</div>
+        <div class="kumo-dialog-actions">
+          <button class="btn-secondary" id="kumoConfirmCancel">取消</button>
+          <button class="btn-primary" id="kumoConfirmOk">确认</button>
+        </div>
+      </div>
+    `;
+
+    overlay.classList.add('active');
+
+    const handleCancel = () => {
+      overlay.classList.remove('active');
+      resolve(false);
+    };
+
+    const handleOk = () => {
+      overlay.classList.remove('active');
+      resolve(true);
+    };
+
+    document.getElementById('kumoConfirmCancel').onclick = handleCancel;
+    document.getElementById('kumoConfirmOk').onclick = handleOk;
+  });
 }
 
 let turnstileWidgetId = null;
@@ -75,25 +149,26 @@ async function handleLogin(event) {
     if (!res.ok) {
       if (data.requireTotp) {
         document.getElementById('totpGroup').style.display = 'block';
-        alert('该账号已开启 2FA，请输入身份验证器 6 位动态码！');
+        showToast('该账号已开启 2FA，请输入身份验证器 6 位动态码', 'info', '需要 2FA 验证');
       } else {
-        alert(`登录失败: ${data.error || '用户名或密码错误'}`);
+        showToast(data.error || '用户名或密码错误', 'error', '登录失败');
       }
       return;
     }
 
     sessionStorage.setItem('edgepulse_token', data.token);
     sessionStorage.setItem('edgepulse_username', data.username);
+    showToast('欢迎回来！登录成功', 'success', '系统提示');
     checkAuth();
   } catch (err) {
-    alert(`登录异常: ${err.message}`);
+    showToast(err.message, 'error', '网络异常');
   }
 }
 
 /* WebAuthn Passkey Registration & Verification */
 async function registerPasskey() {
   if (!window.PublicKeyCredential) {
-    alert('当前浏览器环境不支持 WebAuthn / Passkey 硬件安全密钥');
+    showToast('当前浏览器环境不支持 WebAuthn / Passkey 硬件安全密钥', 'warning');
     return;
   }
 
@@ -125,16 +200,16 @@ async function registerPasskey() {
     });
 
     if (saveRes.ok) {
-      alert('✅ Passkey 设备凭据注册成功！可以通过 Bitwarden / 触控ID 快速登录了。');
+      showToast('Passkey 设备凭据注册成功！可通过 Bitwarden / 触控ID 快速登录', 'success', 'Passkey 绑定成功');
     }
   } catch (err) {
-    alert(`Passkey 注册未完成: ${err.message}`);
+    showToast(err.message, 'warning', 'Passkey 注册未完成');
   }
 }
 
 async function loginWithPasskey() {
   if (!window.PublicKeyCredential) {
-    alert('当前浏览器环境不支持 WebAuthn / Passkey 硬件安全密钥');
+    showToast('当前浏览器环境不支持 WebAuthn / Passkey 硬件安全密钥', 'warning');
     return;
   }
 
@@ -162,19 +237,20 @@ async function loginWithPasskey() {
     if (verifyRes.ok) {
       sessionStorage.setItem('edgepulse_token', data.token);
       sessionStorage.setItem('edgepulse_username', data.username);
-      alert('🔑 Passkey 快速免密验证成功！进入控制台。');
+      showToast('Passkey 快速免密验证成功！', 'success', '登录成功');
       checkAuth();
     } else {
-      alert(`Passkey 验证失败: ${data.error}`);
+      showToast(data.error, 'error', 'Passkey 验证失败');
     }
   } catch (err) {
-    alert(`Passkey 验证取消或异常: ${err.message}`);
+    showToast(err.message, 'info', 'Passkey 验证已取消');
   }
 }
 
 function handleLogout() {
   sessionStorage.removeItem('edgepulse_token');
   sessionStorage.removeItem('edgepulse_username');
+  showToast('已安全退出控制台', 'info');
   checkAuth();
 }
 
@@ -407,7 +483,7 @@ function addNewGroupTag() {
 
   if (!val) return;
   if (activeGroupsList.includes(val)) {
-    alert('该分组已存在');
+    showToast('该分组名称已存在', 'warning');
     return;
   }
 
@@ -512,18 +588,20 @@ async function handleCreateSite(event) {
     sites: [...(cachedConfig.sites || []), newSite],
   };
 
-  await saveConfig(updatedConfig, token, '✅ 监控节点添加成功！');
+  await saveConfig(updatedConfig, token, '监控节点添加成功！');
   switchTab('sites');
 }
 
 async function deleteSite(index) {
-  if (!confirm('确定要删除该监控节点吗？')) return;
+  const confirmed = await showConfirm('确认删除', '确定要彻底删除该监控节点吗？此操作无法撤销。');
+  if (!confirmed) return;
+
   const token = sessionStorage.getItem('edgepulse_token');
   const updatedSites = [...cachedConfig.sites];
   updatedSites.splice(index, 1);
 
   const updatedConfig = { ...cachedConfig, sites: updatedSites };
-  await saveConfig(updatedConfig, token, '✅ 监控节点已删除！');
+  await saveConfig(updatedConfig, token, '监控节点已成功删除！');
 }
 
 async function handleSaveSettings(event) {
@@ -584,7 +662,7 @@ async function handleSaveSettings(event) {
     groups
   };
 
-  await saveConfig(updatedConfig, token, '✅ 安全与系统设置保存成功！');
+  await saveConfig(updatedConfig, token, '安全与系统设置保存成功！');
 
   const oldPassword = document.getElementById('settingOldPassword').value;
   const newUsername = document.getElementById('settingNewUsername').value;
@@ -593,12 +671,12 @@ async function handleSaveSettings(event) {
 
   if (oldPassword || newPassword) {
     if (!oldPassword) {
-      alert('修改密码必须输入当前旧密码！');
+      showToast('修改密码必须输入当前旧密码', 'warning', '密码安全验证');
       return;
     }
 
     if (newPassword !== confirmNewPassword) {
-      alert('❌ 两次输入的新密码不一致，请重新核对！');
+      showToast('两次输入的新密码不一致，请重新核对', 'error', '校验失败');
       return;
     }
 
@@ -611,13 +689,13 @@ async function handleSaveSettings(event) {
 
       const data = await res.json();
       if (!res.ok) {
-        alert(`密码修改失败: ${data.error}`);
+        showToast(data.error || '密码修改失败', 'error');
         return;
       }
-      alert('✅ 账号密码已修改，请重新登录！');
+      showToast('账号密码已成功修改，请重新登录！', 'success');
       handleLogout();
     } catch (err) {
-      alert(`密码修改异常: ${err.message}`);
+      showToast(err.message, 'error', '密码修改异常');
     }
   }
 }
@@ -632,14 +710,15 @@ function exportConfigJson() {
   a.download = `edgepulse-config-${new Date().toISOString().split('T')[0]}.json`;
   a.click();
   URL.revokeObjectURL(url);
+  showToast('配置 JSON 备份文件已成功导出导出下载！', 'success');
 }
 
-function importConfigJson() {
+async function importConfigJson() {
   const fileInput = document.getElementById('importJsonFile');
   const file = fileInput ? fileInput.files[0] : null;
 
   if (!file) {
-    alert('请先选择要导入的 JSON 配置文件！');
+    showToast('请先选择要导入的 JSON 配置文件！', 'warning');
     return;
   }
 
@@ -668,13 +747,14 @@ function importConfigJson() {
         throw new Error('"alerts" 节点格式非法（需为 JSON 对象）');
       }
 
-      const token = sessionStorage.getItem('edgepulse_token');
-      if (!confirm(`确认要恢复导入包含 ${importedData.sites.length} 个监控节点的配置吗？`)) return;
+      const confirmed = await showConfirm('恢复导入确认', `确认要恢复导入包含 ${importedData.sites.length} 个监控节点的配置吗？此操作将覆盖现有一切节点。`);
+      if (!confirmed) return;
 
-      await saveConfig(importedData, token, '✅ 配置数据格式校验成功，恢复导入完成！');
+      const token = sessionStorage.getItem('edgepulse_token');
+      await saveConfig(importedData, token, '配置数据格式校验成功，恢复导入完成！');
       fileInput.value = '';
     } catch (err) {
-      alert(`❌ 格式校验失败，已拒绝导入：\n${err.message}`);
+      showToast(err.message, 'error', '格式校验失败');
     }
   };
 
@@ -694,13 +774,13 @@ async function saveConfig(configPayload, token, successMsg) {
 
     if (!res.ok) {
       const data = await res.json();
-      alert(`保存失败: ${data.error || '鉴权失效'}`);
+      showToast(data.error || '鉴权失效', 'error', '保存失败');
       return;
     }
 
-    alert(successMsg);
+    showToast(successMsg, 'success', '系统提示');
     loadConfig();
   } catch (err) {
-    alert(`保存异常: ${err.message}`);
+    showToast(err.message, 'error', '保存异常');
   }
 }

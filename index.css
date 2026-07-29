@@ -553,7 +553,141 @@ textarea:focus {
   background: var(--bg-card-hover);
 }
 
-/* Cloudflare Kumo UI File Input Styling */
+/* Cloudflare Kumo UI / Base UI Toast & Confirm Modal System */
+.kumo-toast-container {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  pointer-events: none;
+}
+
+.kumo-toast {
+  pointer-events: auto;
+  min-width: 300px;
+  max-width: 440px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card-bright);
+  border-radius: var(--radius-kumo, 10px);
+  padding: 0.85rem 1.1rem;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transform: translateY(-20px) scale(0.95);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.kumo-toast.show {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+.kumo-toast-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+  margin-top: 0.1rem;
+}
+
+.kumo-toast-content {
+  flex: 1;
+}
+
+.kumo-toast-title {
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+}
+
+.kumo-toast-close {
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+
+.kumo-toast-close:hover {
+  color: var(--text-primary);
+}
+
+.kumo-toast.success {
+  border-left: 4px solid var(--color-green);
+}
+.kumo-toast.error {
+  border-left: 4px solid var(--color-red);
+}
+.kumo-toast.info {
+  border-left: 4px solid var(--color-accent);
+}
+
+/* Cloudflare Kumo Confirm Modal */
+.kumo-dialog-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(12px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.kumo-dialog-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.kumo-dialog-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card-bright);
+  border-radius: 14px;
+  width: 90%;
+  max-width: 420px;
+  padding: 1.5rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  transform: scale(0.95);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.kumo-dialog-overlay.active .kumo-dialog-card {
+  transform: scale(1);
+}
+
+.kumo-dialog-title {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.6rem;
+}
+
+.kumo-dialog-body {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.kumo-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
 input[type="file"] {
   background: var(--bg-card);
   border: 1px solid var(--border-card);
