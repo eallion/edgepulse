@@ -1,7 +1,7 @@
 /**
  * EdgePulse Admin Dashboard Logic
  * Powered by Cloudflare Kumo UI / Base UI Tokens.
- * Features 2-stage High-Risk System Reset Protocol (Confirm + Password Verification), Title, Favicon Data URL, Kumo Toast & Dialogs.
+ * Single Integrated High-Risk Reset Password Modal & Toast components.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -146,26 +146,24 @@ function showConfirm(title, message) {
   });
 }
 
-/* Irreversible High-Risk System Reset Protocol (2-Stage Verification) */
-async function triggerResetFlow() {
-  const confirmed = await showConfirm(
-    '⚠️ 危险高危操作确认',
-    '您即将彻底清空所有监控节点、告警通道及系统配置！清空后无法恢复。确定要继续重置吗？'
-  );
-
-  if (!confirmed) return;
-
-  // 1st Stage passed -> Open 2nd Stage Password Modal
-  document.getElementById('resetPasswordOverlay').classList.add('active');
+/* High-Risk System Reset Modal Controllers */
+function openResetPasswordModal() {
+  const overlay = document.getElementById('resetPasswordOverlay');
   const inputEl = document.getElementById('resetConfirmPasswordInput');
+  if (overlay) {
+    overlay.classList.add('active');
+  }
   if (inputEl) {
     inputEl.value = '';
-    inputEl.focus();
+    setTimeout(() => inputEl.focus(), 100);
   }
 }
 
 function closeResetPasswordModal() {
-  document.getElementById('resetPasswordOverlay').classList.remove('active');
+  const overlay = document.getElementById('resetPasswordOverlay');
+  if (overlay) {
+    overlay.classList.remove('active');
+  }
 }
 
 async function executeResetWithPassword() {
@@ -197,7 +195,7 @@ async function executeResetWithPassword() {
     }
 
     closeResetPasswordModal();
-    showToast('系统 KV 存储数据已彻底重置清空！即刻退出登录...', 'success', '重置成功');
+    showToast('系统 KV 存储数据已彻底重置清空！即将退出登录并刷新...', 'success', '重置成功');
 
     setTimeout(() => {
       handleLogout();

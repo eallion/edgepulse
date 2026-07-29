@@ -481,15 +481,7 @@
                   <input type="file" id="importJsonFile" accept=".json">
                   <button type="button" class="btn-primary" onclick="importConfigJson()">📤 校验并恢复导入</button>
                 </div>
-              </div>
-
-              <!-- High-Risk Purge Reset Section -->
-              <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 0.85rem 1rem; margin-top: 1.25rem;">
-                <div style="font-weight: 600; color: var(--color-red); margin-bottom: 0.3rem;">⚠️ 不可逆高危重置警告</div>
-                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
-                  此操作将彻底清空当前绑定的 EdgeOne KV 存储数据（包含所有监控节点、告警服务、自定义分组及站点设置），将系统恢复至初始空状态。点击后需通过二次确认及管理员密码验身。
-                </p>
-                <button type="button" class="btn-secondary" style="color: var(--color-red); border-color: rgba(239, 68, 68, 0.4);" onclick="triggerResetFlow()">⚠️ 重置清空系统 KV 数据</button>
+                <button type="button" class="btn-secondary" style="color: var(--color-red); border-color: rgba(239, 68, 68, 0.4);" onclick="openResetPasswordModal()">⚠️ 重置清空系统 KV 数据</button>
               </div>
             </div>
 
@@ -502,13 +494,20 @@
     </div>
   </div>
 
-  <!-- Reset Password Prompt Dialog Modal -->
+  <!-- Reset Password & Warning Modal -->
   <div class="kumo-dialog-overlay" id="resetPasswordOverlay">
-    <div class="kumo-dialog-card">
-      <div class="kumo-dialog-title" style="color: var(--color-red);">⚠️ 高危重置：验证管理员密码</div>
+    <div class="kumo-dialog-card" style="max-width: 460px;">
+      <div class="kumo-dialog-title" style="color: var(--color-red); font-size: 1.15rem;">⚠️ 高危重置：清空系统 KV 存储数据</div>
       <div class="kumo-dialog-body">
-        <p style="margin-bottom: 0.75rem;">即将彻底擦除清空所有关联的 EdgeOne KV 节点与配置！此操作无法撤销。请输入当前管理员密码完成身份校验：</p>
-        <input type="password" id="resetConfirmPasswordInput" placeholder="输入当前管理员密码" style="width: 100%;">
+        <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 0.85rem; margin-bottom: 1.25rem; font-size: 0.85rem; color: var(--text-primary); line-height: 1.5;">
+          <strong>警告：此操作不可逆！</strong><br>
+          将彻底清空当前关联的 EdgeOne KV 数据库（包含所有已添加的监控节点、告警服务、自定义分组及站点设置），并将系统恢复至初始空状态。
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label style="color: var(--text-primary); font-weight: 600;">请输入当前管理员密码以确认重置：</label>
+          <input type="password" id="resetConfirmPasswordInput" placeholder="输入当前管理员密码 (默认: admin)" style="width: 100%;">
+        </div>
       </div>
       <div class="kumo-dialog-actions">
         <button type="button" class="btn-secondary" onclick="closeResetPasswordModal()">取消</button>
