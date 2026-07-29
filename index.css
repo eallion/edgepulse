@@ -478,6 +478,13 @@ footer a {
   text-decoration: none;
 }
 
+#countdownText {
+  display: inline-block;
+  min-width: 84px;
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Modal Component */
 .modal-overlay {
   position: fixed;
