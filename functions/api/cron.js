@@ -51,14 +51,17 @@ export async function onRequest(context) {
             errorMsg = `Push heartbeat missed (> ${pushTimeoutSec}s)`;
           }
         } else if (site.type === 'http' || site.type === 'https' || !site.type) {
-          // HTTP / HTTPS Detection
+          // HTTP / HTTPS Detection (Defaults to HEAD for ultra-lightweight probes)
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), site.timeout || 5000);
 
+          // Use HEAD by default to save server bandwidth & memory, fallback to GET if keyword check is requested
+          const requestMethod = site.method || (site.keyword ? 'GET' : 'HEAD');
+
           const res = await fetch(site.url, {
-            method: site.method || 'GET',
+            method: requestMethod,
             headers: site.headers || { 'User-Agent': 'EdgePulse-Monitor/1.0' },
-            body: site.body || undefined,
+            body: requestMethod !== 'HEAD' && requestMethod !== 'GET' ? site.body : undefined,
             signal: controller.signal,
           });
 
