@@ -78,6 +78,13 @@
       width: auto;
       cursor: pointer;
     }
+    .expiry-panel {
+      background: rgba(6, 182, 212, 0.05);
+      border: 1px solid var(--border-card-bright);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 1rem;
+    }
   </style>
 </head>
 <body>
@@ -135,9 +142,10 @@
             <thead>
               <tr>
                 <th>节点名称</th>
-                <th>类型</th>
+                <th>类型与层级</th>
                 <th>目标 URL / IP / 域名</th>
                 <th>分组</th>
+                <th>到期监控规则</th>
                 <th>绑定的告警渠道</th>
                 <th>操作</th>
               </tr>
@@ -168,33 +176,69 @@
             </div>
             <div class="form-group" id="adminUrlGroup">
               <label>目标 URL</label>
-              <input type="url" id="newSiteUrl" placeholder="https://example.com">
+              <input type="url" id="newSiteUrl" placeholder="https://example.com 或 https://demo.example.com" oninput="onUrlOrHostInput()">
             </div>
             <div class="form-group" id="adminHostGroup" style="display: none;">
               <label>目标 IP / Host</label>
-              <input type="text" id="newSiteHost" placeholder="例如: 1.2.3.4">
+              <input type="text" id="newSiteHost" placeholder="例如: 1.2.3.4 或 db.example.com">
             </div>
             <div class="form-group" id="adminDomainGroup" style="display: none;">
               <label>域名 (Domain)</label>
-              <input type="text" id="newSiteDomain" placeholder="例如: eallion.com">
+              <input type="text" id="newSiteDomain" placeholder="例如: eallion.com" oninput="onUrlOrHostInput()">
             </div>
-            <div class="form-group">
+
+            <!-- Intelligent Expiry Monitor Panel -->
+            <div class="expiry-panel" id="expiryMonitorPanel">
+              <div style="font-weight: 600; font-size: 0.9rem; color: var(--color-accent); margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+                <span>🔒 智能到期监控规则 (<span id="domainLevelBadge">识别中...</span>)</span>
+              </div>
+              <div class="checkbox-group">
+                <label class="checkbox-item" id="chkDomainItem">
+                  <input type="checkbox" id="chkEnableDomainExpiry" checked>
+                  <span>🌐 监控域名到期时间 (根域名专用)</span>
+                </label>
+                <label class="checkbox-item" id="chkSslItem">
+                  <input type="checkbox" id="chkEnableSslExpiry" checked>
+                  <span>🔒 监控 SSL/TLS 证书到期时间</span>
+                </label>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; margin-top: 0.75rem;">
+                <div>
+                  <label style="font-size: 0.8rem; color: var(--text-secondary);">到期检查频率</label>
+                  <select id="expiryFrequency">
+                    <option value="daily">Daily 每天检查一次</option>
+                    <option value="weekly">Weekly 每周检查一次</option>
+                  </select>
+                </div>
+                <div id="domainWarnDaysGroup">
+                  <label style="font-size: 0.8rem; color: var(--text-secondary);">域名提前提醒 (天)</label>
+                  <input type="number" id="domainWarnDays" value="30" placeholder="默认 30 天">
+                </div>
+                <div id="sslWarnDaysGroup">
+                  <label style="font-size: 0.8rem; color: var(--text-secondary);">SSL 提前提醒 (天)</label>
+                  <input type="number" id="sslWarnDays" value="14" placeholder="默认 14 天">
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 1rem;">
               <label>所属分组 (Group)</label>
               <select id="newSiteGroupSelect">
-                <!-- Dynamically filled from Settings Groups -->
+                <!-- Dynamically filled -->
               </select>
             </div>
             <div class="form-group">
               <label>选择绑定的告警通知服务 (可选，仅展示已配置过的通知服务)</label>
               <div class="checkbox-group" id="availableAlertChannels">
-                <!-- Dynamically filled based on configured channels in Settings -->
+                <!-- Dynamically filled -->
               </div>
             </div>
             <button type="submit" class="btn-primary">确认添加节点</button>
           </form>
         </div>
 
-        <!-- Tab 3: Settings (Combined Alerts, Groups, Email & Security) -->
+        <!-- Tab 3: Settings -->
         <div id="tab-settings" style="display: none;">
           <form onsubmit="handleSaveSettings(event)">
             <!-- 1. Notification Channels -->

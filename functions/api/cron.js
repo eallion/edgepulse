@@ -105,18 +105,46 @@ export async function onRequest(context) {
             status = 'degraded';
           }
 
-          // Check SSL Expiry if HTTPS
-          if (site.url.startsWith('https://')) {
+          // Check SSL Expiry if HTTPS and checkSsl is enabled
+          if (site.checkSsl !== false && site.url && site.url.startsWith('https://')) {
             try {
-              // Extract domain from URL and check RDAP / SSL
-              const domain = new URL(site.url).hostname;
-              sslExpiryDays = await checkSslExpiry(domain);
-            } catch (e) {
-              // Non-blocking SSL parse failure
-            }
+              const hostname = new URL(site.url).hostname;
+              sslExpiryDays = await checkSslExpiry(hostname);
+              const sslWarnThreshold = site.sslWarnDays || 14;
+
+              if (sslExpiryDays !== null && sslExpiryDays <= sslWarnThreshold) {
+                alertQueue.push({
+                  site,
+                  previousState: 'up',
+                  currentState: 'degraded',
+                  latency,
+                  errorMsg: `⚠️ SSL 证书即将在 ${sslExpiryDays} 天后过期 (阈值: ${sslWarnThreshold}天)`,
+                  timestamp: new Date().toISOString(),
+                });
+              }
+            } catch (e) {}
+          }
+
+          // Check Domain Expiry if checkDomain is explicitly enabled (Root Domains only)
+          if (site.checkDomain === true) {
+            try {
+              const hostname = site.url ? new URL(site.url).hostname : (site.domain || '');
+              domainExpiryDays = await checkDomainExpiry(hostname);
+              const domainWarnThreshold = site.domainWarnDays || 30;
+
+              if (domainExpiryDays !== null && domainExpiryDays <= domainWarnThreshold) {
+                alertQueue.push({
+                  site,
+                  previousState: 'up',
+                  currentState: 'degraded',
+                  latency,
+                  errorMsg: `⚠️ 根域名即将在 ${domainExpiryDays} 天后到期 (阈值: ${domainWarnThreshold}天)`,
+                  timestamp: new Date().toISOString(),
+                });
+              }
+            } catch (e) {}
           }
         } else if (site.type === 'domain') {
-          // Domain Expiry Detection
           domainExpiryDays = await checkDomainExpiry(site.domain);
           status = domainExpiryDays !== null && domainExpiryDays > 0 ? 'up' : 'down';
           latency = Date.now() - startTime;
