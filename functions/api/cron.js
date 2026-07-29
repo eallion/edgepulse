@@ -220,17 +220,21 @@ async function checkSslExpiry(domain) {
 }
 
 /**
- * Multi-channel Alert Dispatcher
+ * Multi-channel Alert Dispatcher (Per-site Selective Channels & Email support)
  */
 async function dispatchAlerts(alerts, alertConfig) {
   for (const alert of alerts) {
     const { site, previousState, currentState, latency, errorMsg } = alert;
     const isDown = currentState === 'down';
     const title = `[EdgePulse] ${site.name} ${isDown ? '🔴 故障 (Down)' : '🟢 恢复 (Resolved)'}`;
-    const message = `服务: ${site.name}\nURL: ${site.url || site.host || 'N/A'}\n状态: ${currentState.toUpperCase()}\n延时: ${latency}ms\n原因: ${errorMsg || 'None'}\n时间: ${new Date().toLocaleString('zh-CN')}`;
+    const message = `服务: ${site.name}\nURL: ${site.url || site.host || site.domain || 'N/A'}\n状态: ${currentState.toUpperCase()}\n延时: ${latency}ms\n原因: ${errorMsg || 'None'}\n时间: ${new Date().toLocaleString('zh-CN')}`;
+
+    // Helper to check if a channel is enabled for this specific site
+    const channels = site.alertChannels;
+    const shouldSend = (channelId) => !channels || channels.length === 0 || channels.includes(channelId);
 
     // 1. Lark / 飞书 Webhook
-    if (alertConfig.larkWebhook) {
+    if (shouldSend('lark') && alertConfig.larkWebhook) {
       await fetch(alertConfig.larkWebhook, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -248,7 +252,7 @@ async function dispatchAlerts(alerts, alertConfig) {
     }
 
     // 2. Enterprise WeChat / 企业微信
-    if (alertConfig.wechatWebhook) {
+    if (shouldSend('wechat') && alertConfig.wechatWebhook) {
       await fetch(alertConfig.wechatWebhook, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -259,8 +263,20 @@ async function dispatchAlerts(alerts, alertConfig) {
       }).catch(() => {});
     }
 
-    // 3. Telegram Bot
-    if (alertConfig.telegramToken && alertConfig.telegramChatId) {
+    // 3. DingTalk / 钉钉
+    if (shouldSend('dingtalk') && alertConfig.dingtalkWebhook) {
+      await fetch(alertConfig.dingtalkWebhook, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          msgtype: 'markdown',
+          markdown: { title, text: `### ${title}\n${message}` },
+        }),
+      }).catch(() => {});
+    }
+
+    // 4. Telegram Bot
+    if (shouldSend('telegram') && alertConfig.telegramToken && alertConfig.telegramChatId) {
       await fetch(`https://api.telegram.org/bot${alertConfig.telegramToken}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -272,18 +288,29 @@ async function dispatchAlerts(alerts, alertConfig) {
       }).catch(() => {});
     }
 
-    // 4. Bark (iOS Push)
-    if (alertConfig.barkUrl) {
+    // 5. Bark (iOS Push)
+    if (shouldSend('bark') && alertConfig.barkUrl) {
       const barkEndpoint = `${alertConfig.barkUrl.replace(/\/$/, '')}/${encodeURIComponent(title)}/${encodeURIComponent(message)}`;
       await fetch(barkEndpoint).catch(() => {});
     }
 
-    // 5. Custom Webhook
-    if (alertConfig.customWebhook) {
-      await fetch(alertConfig.customWebhook, {
+    // 6. Email / Resend / SMTP Notification
+    if (shouldSend('email') && alertConfig.email && alertConfig.email.receiver) {
+      // If Resend API key or Cloud Function SMTP is available
+      const emailPayload = {
+        to: alertConfig.email.receiver,
+        subject: title,
+        html: `<div style="padding: 20px; background: #0f172a; color: #f8fafc; font-family: sans-serif;">
+          <h2 style="color: ${isDown ? '#ef4444' : '#10b981'};">${title}</h2>
+          <pre style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; font-size: 14px;">${message}</pre>
+        </div>`,
+      };
+      
+      // Dispatch via Cloud Function SMTP handler or Resend API
+      await fetch('/api/auth/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(alert),
+        body: JSON.stringify({ ...emailPayload, smtpConfig: alertConfig.email }),
       }).catch(() => {});
     }
   }

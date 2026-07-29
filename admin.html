@@ -50,6 +50,34 @@
       color: var(--text-secondary);
       font-size: 0.85rem;
     }
+    .section-title {
+      font-family: var(--font-heading);
+      font-size: 1.1rem;
+      color: var(--color-accent);
+      margin: 1.5rem 0 1rem 0;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px dashed var(--border-card);
+    }
+    .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 0.5rem;
+    }
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255,255,255,0.05);
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      border: 1px solid var(--border-card);
+      cursor: pointer;
+    }
+    .checkbox-item input[type="checkbox"] {
+      width: auto;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -97,8 +125,7 @@
         <div class="tab-nav">
           <div class="tab-item active" onclick="switchTab('sites')">📍 监控节点列表</div>
           <div class="tab-item" onclick="switchTab('addSite')">➕ 添加监控节点</div>
-          <div class="tab-item" onclick="switchTab('alerts')">🔔 告警通道设置</div>
-          <div class="tab-item" onclick="switchTab('security')">🔑 修改账号密码</div>
+          <div class="tab-item" onclick="switchTab('settings')">⚙️ 设置</div>
         </div>
 
         <!-- Tab 1: Sites List -->
@@ -111,6 +138,7 @@
                 <th>类型</th>
                 <th>目标 URL / IP / 域名</th>
                 <th>分组</th>
+                <th>绑定的告警渠道</th>
                 <th>操作</th>
               </tr>
             </thead>
@@ -151,58 +179,99 @@
               <input type="text" id="newSiteDomain" placeholder="例如: eallion.com">
             </div>
             <div class="form-group">
-              <label>分组名称 (Group)</label>
-              <input type="text" id="newSiteGroup" value="核心服务" required>
+              <label>所属分组 (Group)</label>
+              <select id="newSiteGroupSelect">
+                <!-- Dynamically filled from Settings Groups -->
+              </select>
+            </div>
+            <div class="form-group">
+              <label>选择绑定的告警通知服务 (可选，仅展示已配置过的通知服务)</label>
+              <div class="checkbox-group" id="availableAlertChannels">
+                <!-- Dynamically filled based on configured channels in Settings -->
+              </div>
             </div>
             <button type="submit" class="btn-primary">确认添加节点</button>
           </form>
         </div>
 
-        <!-- Tab 3: Alerts -->
-        <div id="tab-alerts" style="display: none;">
-          <h3>多渠道告警配置</h3>
-          <form onsubmit="handleSaveAlerts(event)">
+        <!-- Tab 3: Settings (Combined Alerts, Groups, Email & Security) -->
+        <div id="tab-settings" style="display: none;">
+          <form onsubmit="handleSaveSettings(event)">
+            <!-- 1. Notification Channels -->
+            <div class="section-title">🔔 告警通知渠道设置</div>
             <div class="form-group">
               <label>飞书 (Lark) 自定义机器人 Webhook</label>
-              <input type="url" id="alertLark" placeholder="https://open.feishu.cn/open-apis/bot/v2/hook/xxx">
+              <input type="url" id="settingLark" placeholder="https://open.feishu.cn/open-apis/bot/v2/hook/xxx">
             </div>
             <div class="form-group">
               <label>企业微信 Webhook</label>
-              <input type="url" id="alertWechat" placeholder="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=xxx">
+              <input type="url" id="settingWechat" placeholder="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=xxx">
             </div>
             <div class="form-group">
-              <label>Telegram Bot Token</label>
-              <input type="text" id="alertTgToken" placeholder="例如: 123456:ABC-DEF">
+              <label>钉钉 (DingTalk) 机器人 Webhook</label>
+              <input type="url" id="settingDingtalk" placeholder="https://oapi.dingtalk.com/robot/send?access_token=xxx">
             </div>
             <div class="form-group">
-              <label>Telegram Chat ID</label>
-              <input type="text" id="alertTgChatId" placeholder="例如: 987654321">
+              <label>Telegram Bot Token 与 Chat ID (格式: TOKEN|CHAT_ID)</label>
+              <input type="text" id="settingTelegram" placeholder="例如: 123456:ABC-DEF|987654321">
             </div>
             <div class="form-group">
               <label>Bark 推送地址 (iOS)</label>
-              <input type="url" id="alertBark" placeholder="https://api.day.app/your_token">
+              <input type="url" id="settingBark" placeholder="https://api.day.app/your_token">
             </div>
-            <button type="submit" class="btn-primary">保存告警配置</button>
-          </form>
-        </div>
+            
+            <!-- Email / SMTP Settings -->
+            <div class="form-group" style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-card);">
+              <label style="font-weight: 600; color: var(--color-accent); margin-bottom: 0.5rem;">✉️ Email 邮件通知设置 (SMTP / Resend API)</label>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.5rem;">
+                <div>
+                  <label>SMTP 服务器 (Host)</label>
+                  <input type="text" id="settingSmtpHost" placeholder="如 smtp.qq.com 或 smtp.gmail.com">
+                </div>
+                <div>
+                  <label>SMTP 端口 (Port)</label>
+                  <input type="number" id="settingSmtpPort" placeholder="默认 465 或 587" value="465">
+                </div>
+                <div>
+                  <label>发件人账号 (User)</label>
+                  <input type="text" id="settingSmtpUser" placeholder="例如: your-email@qq.com">
+                </div>
+                <div>
+                  <label>发件人密码/授权码 (Pass)</label>
+                  <input type="password" id="settingSmtpPass" placeholder="邮箱授权码或应用密码">
+                </div>
+              </div>
+              <div style="margin-top: 0.75rem;">
+                <label>接收告警的邮箱地址 (Receiver Email)</label>
+                <input type="email" id="settingEmailReceiver" placeholder="接收故障/恢复通知的邮箱地址">
+              </div>
+            </div>
 
-        <!-- Tab 4: Security (Password Change) -->
-        <div id="tab-security" style="display: none;">
-          <h3>修改管理员账号与密码</h3>
-          <form onsubmit="handleChangePassword(event)">
+            <!-- 2. Group Management -->
+            <div class="section-title">📂 监控分组管理</div>
             <div class="form-group">
-              <label>当前旧密码 (Old Password)</label>
-              <input type="password" id="secOldPassword" required>
+              <label>自定义分组列表 (用英文逗号逗开)</label>
+              <input type="text" id="settingGroups" placeholder="核心服务, 网站节点, VPS 服务器, 域名资产" value="核心服务, 网站节点, VPS 服务器, 域名资产">
+            </div>
+
+            <!-- 3. Password Modification -->
+            <div class="section-title">🔑 修改管理员账号与密码</div>
+            <div class="form-group">
+              <label>当前旧密码 (修改账号密码时必填)</label>
+              <input type="password" id="settingOldPassword" placeholder="无需修改账号密码请留空">
             </div>
             <div class="form-group">
-              <label>新用户名 (New Username)</label>
-              <input type="text" id="secNewUsername" placeholder="默认留空则不修改用户名">
+              <label>新用户名 (Username)</label>
+              <input type="text" id="settingNewUsername" placeholder="留空则保持当前用户名">
             </div>
             <div class="form-group">
               <label>新密码 (New Password)</label>
-              <input type="password" id="secNewPassword" required>
+              <input type="password" id="settingNewPassword" placeholder="留空则保持当前密码">
             </div>
-            <button type="submit" class="btn-primary">保存新账号密码</button>
+
+            <div style="margin-top: 2rem;">
+              <button type="submit" class="btn-primary" style="width: 100%;">保存所有设置</button>
+            </div>
           </form>
         </div>
       </div>
