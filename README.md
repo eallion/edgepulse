@@ -34,7 +34,6 @@
 ├── index.css                    # Glassmorphism 样式系统与 Token
 ├── index.js                     # 状态页数据交互与图表渲染
 ├── edgeone.json                 # EdgeOne Makers 平台配置文件
-├── middleware.js                # 边缘路由中间件 (遵循 export function middleware(context) 导出规范，控制 /api/* 匹配路由)
 ├── README.md                    # 项目使用与部署说明文档
 └── functions/
     └── api/
