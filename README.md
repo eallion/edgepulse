@@ -69,6 +69,9 @@
 ## 🔐 独立管理后台与默认登录凭据
 
 - 🔐 **后台独立管理面板 (`/admin.html`)**：支持默认 `admin/admin` 登录与旧密码校验修改。包含三大高效控制模块：
+  - 🔑 **Passkey 无密码极速登录 (WebAuthn)**：原生支持 Bitwarden 插件弹窗、macOS TouchID/FaceID 及 YubiKey 硬件密钥注册与免密登录。
+  - 🛡️ **2FA 双因素身份验证 (TOTP)**：支持绑定 Google Authenticator、Bitwarden 2FA 等身份验证器，登录时进行 6 位数动态验证。
+  - 🤖 **Cloudflare Turnstile 人机防护 (默认关闭)**：支持集成 Cloudflare 隐形人机验证，并**原生支持 Cloudflare 官方 Dev Site Keys 调试**（`1x00000000000000000000AA` 总是通过 / `2x00000000000000000000AB` 总是拦截）。
   - 📍 **节点列表与管理**：查看/创建/删除监控节点，**按节点联动勾选仅属于该节点的告警通道**（如仅给节点 A 勾选飞书、节点 B 勾选 Telegram+Email）。
   - ⚙️ **合并统一设置**：
     - 🔔 **多渠道告警通道配置 (显式 Switch 开关控制)**：包含飞书、企业微信、钉钉、Telegram、Bark、PushPlus (推送加) 及 **Email 邮件通知设置** (支持配置 SMTP Host/Port/User/Pass、独立发件人显示名称 `From Sender` 及接收邮箱)。每个服务均提供独立的“启用此服务”开关控制。

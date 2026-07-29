@@ -1,7 +1,7 @@
 /**
  * EdgePulse Admin Dashboard Logic
- * Handles Authentication, Consolidated Settings (Explicit Toggles), JSON Export & Strict Import Validation,
- * Double-check Password Verification, Apex/Subdomain hierarchy detection, Expiry frequencies, and Node CRUD.
+ * Handles Authentication, Passkey (WebAuthn / Bitwarden), 2FA TOTP, Cloudflare Turnstile (Dev Site Keys),
+ * Consolidated Settings, JSON Backup Export & Strict Import Validation, and Node CRUD.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -36,6 +36,8 @@ function applyTheme(theme) {
   }
 }
 
+let turnstileWidgetId = null;
+
 function checkAuth() {
   const token = sessionStorage.getItem('edgepulse_token');
   const username = sessionStorage.getItem('edgepulse_username') || 'admin';
@@ -55,17 +57,28 @@ async function handleLogin(event) {
   event.preventDefault();
   const username = document.getElementById('loginUsername').value;
   const password = document.getElementById('loginPassword').value;
+  const totpCode = document.getElementById('loginTotpCode').value;
+
+  let turnstileToken = '';
+  if (typeof turnstile !== 'undefined' && turnstileWidgetId !== null) {
+    turnstileToken = turnstile.getResponse(turnstileWidgetId) || '';
+  }
 
   try {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ username, password, totpCode, turnstileToken }),
     });
 
     const data = await res.json();
     if (!res.ok) {
-      alert(`登录失败: ${data.error || '用户名或密码错误'}`);
+      if (data.requireTotp) {
+        document.getElementById('totpGroup').style.display = 'block';
+        alert('该账号已开启 2FA，请输入身份验证器 6 位动态码！');
+      } else {
+        alert(`登录失败: ${data.error || '用户名或密码错误'}`);
+      }
       return;
     }
 
@@ -74,6 +87,88 @@ async function handleLogin(event) {
     checkAuth();
   } catch (err) {
     alert(`登录异常: ${err.message}`);
+  }
+}
+
+/* WebAuthn Passkey Registration & Verification */
+async function registerPasskey() {
+  if (!window.PublicKeyCredential) {
+    alert('当前浏览器环境不支持 WebAuthn / Passkey 硬件安全密钥');
+    return;
+  }
+
+  try {
+    const challengeRes = await fetch('/api/auth/passkey/challenge');
+    const { challenge } = await challengeRes.json();
+
+    const credential = await navigator.credentials.create({
+      publicKey: {
+        challenge: Uint8Array.from(challenge, c => c.charCodeAt(0)),
+        rp: { name: "EdgePulse Status Monitor" },
+        user: {
+          id: new Uint8Array(16),
+          name: "admin",
+          displayName: "Administrator"
+        },
+        pubKeyCredParams: [{ alg: -7, type: "public-key" }, { alg: -257, type: "public-key" }],
+        timeout: 60000,
+        authenticatorSelection: { userVerification: "preferred" },
+      }
+    });
+
+    const saveRes = await fetch('/api/auth/passkey/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        credential: { id: credential.id, rawId: btoa(String.fromCharCode(...new Uint8Array(credential.rawId))), type: credential.type }
+      }),
+    });
+
+    if (saveRes.ok) {
+      alert('✅ Passkey 设备凭据注册成功！可以通过 Bitwarden / 触控ID 快速登录了。');
+    }
+  } catch (err) {
+    alert(`Passkey 注册未完成: ${err.message}`);
+  }
+}
+
+async function loginWithPasskey() {
+  if (!window.PublicKeyCredential) {
+    alert('当前浏览器环境不支持 WebAuthn / Passkey 硬件安全密钥');
+    return;
+  }
+
+  try {
+    const challengeRes = await fetch('/api/auth/passkey/challenge');
+    const { challenge } = await challengeRes.json();
+
+    const credential = await navigator.credentials.get({
+      publicKey: {
+        challenge: Uint8Array.from(challenge, c => c.charCodeAt(0)),
+        timeout: 60000,
+        userVerification: "preferred",
+      }
+    });
+
+    const verifyRes = await fetch('/api/auth/passkey/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        credential: { id: credential.id, type: credential.type }
+      }),
+    });
+
+    const data = await verifyRes.json();
+    if (verifyRes.ok) {
+      sessionStorage.setItem('edgepulse_token', data.token);
+      sessionStorage.setItem('edgepulse_username', data.username);
+      alert('🔑 Passkey 快速免密验证成功！进入控制台。');
+      checkAuth();
+    } else {
+      alert(`Passkey 验证失败: ${data.error}`);
+    }
+  } catch (err) {
+    alert(`Passkey 验证取消或异常: ${err.message}`);
   }
 }
 
@@ -224,6 +319,28 @@ let activeGroupsList = ['default'];
 function fillSettingsForm(config) {
   const alerts = config.alerts || {};
   
+  // Security Toggles
+  document.getElementById('chkTotpEnabled').checked = !!config.totpEnabled;
+  if (config.totpSecret) document.getElementById('settingTotpSecret').value = config.totpSecret;
+
+  document.getElementById('chkTurnstileEnabled').checked = !!config.turnstileEnabled;
+  if (config.turnstileSiteKey) document.getElementById('settingTurnstileSiteKey').value = config.turnstileSiteKey;
+  if (config.turnstileSecretKey) document.getElementById('settingTurnstileSecretKey').value = config.turnstileSecretKey;
+
+  // Render Turnstile Widget in Login Form if Turnstile is Enabled
+  if (config.turnstileEnabled && config.turnstileSiteKey && typeof turnstile !== 'undefined') {
+    document.getElementById('turnstileContainer').style.display = 'flex';
+    try {
+      turnstileWidgetId = turnstile.render('#cfTurnstileWidget', {
+        sitekey: config.turnstileSiteKey,
+        theme: 'dark',
+      });
+    } catch (e) {}
+  } else {
+    document.getElementById('turnstileContainer').style.display = 'none';
+  }
+
+  // Alert Channel Toggles
   document.getElementById('chkLarkEnabled').checked = alerts.larkEnabled ?? !!alerts.larkWebhook;
   if (alerts.larkWebhook) document.getElementById('settingLark').value = alerts.larkWebhook;
 
@@ -411,6 +528,13 @@ async function handleSaveSettings(event) {
   event.preventDefault();
   const token = sessionStorage.getItem('edgepulse_token');
 
+  const totpEnabled = document.getElementById('chkTotpEnabled').checked;
+  const totpSecret = document.getElementById('settingTotpSecret').value;
+
+  const turnstileEnabled = document.getElementById('chkTurnstileEnabled').checked;
+  const turnstileSiteKey = document.getElementById('settingTurnstileSiteKey').value;
+  const turnstileSecretKey = document.getElementById('settingTurnstileSecretKey').value;
+
   const tgValue = document.getElementById('settingTelegram').value.split('|');
   const alerts = {
     larkEnabled: document.getElementById('chkLarkEnabled').checked,
@@ -445,10 +569,19 @@ async function handleSaveSettings(event) {
 
   const groups = activeGroupsList;
 
-  const updatedConfig = { ...cachedConfig, alerts, groups };
-  await saveConfig(updatedConfig, token, '✅ 设置与告警配置保存成功！');
+  const updatedConfig = {
+    ...cachedConfig,
+    totpEnabled,
+    totpSecret,
+    turnstileEnabled,
+    turnstileSiteKey,
+    turnstileSecretKey,
+    alerts,
+    groups
+  };
 
-  // Password Modification with Double Check
+  await saveConfig(updatedConfig, token, '✅ 安全与系统设置保存成功！');
+
   const oldPassword = document.getElementById('settingOldPassword').value;
   const newUsername = document.getElementById('settingNewUsername').value;
   const newPassword = document.getElementById('settingNewPassword').value;
@@ -512,7 +645,6 @@ function importConfigJson() {
       const content = e.target.result;
       const importedData = JSON.parse(content);
 
-      // Strict Schema Validation Protocol
       if (typeof importedData !== 'object' || importedData === null) {
         throw new Error('导入文件内容不是有效的 JSON 对象');
       }

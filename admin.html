@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EdgePulse - 控制台管理后台</title>
   <link rel="stylesheet" href="index.css">
+  <!-- Cloudflare Turnstile Official Script -->
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <style>
     .admin-card {
       background: var(--bg-card);
@@ -15,7 +17,7 @@
       box-shadow: 0 8px 32px rgba(0,0,0,0.4);
     }
     .login-container {
-      max-width: 420px;
+      max-width: 440px;
       margin: 4rem auto;
     }
     .tab-nav {
@@ -78,13 +80,6 @@
       width: auto;
       cursor: pointer;
     }
-    .expiry-panel {
-      background: rgba(6, 182, 212, 0.05);
-      border: 1px solid var(--border-card-bright);
-      border-radius: 8px;
-      padding: 1rem;
-      margin-top: 1rem;
-    }
     .channel-box {
       background: rgba(255,255,255,0.03);
       padding: 1rem;
@@ -120,8 +115,25 @@
             <label>密码 (Password)</label>
             <input type="password" id="loginPassword" placeholder="默认: admin" required>
           </div>
-          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">提示：首次使用默认账号密码为 admin / admin</p>
+          
+          <!-- 2FA Input (Shown when 2FA is enabled) -->
+          <div class="form-group" id="totpGroup" style="display: none;">
+            <label style="color: var(--color-accent);">🛡️ 2FA 双因素验证码 (6位数)</label>
+            <input type="text" id="loginTotpCode" placeholder="输入身份验证器 6 位数字">
+          </div>
+
+          <!-- Cloudflare Turnstile Container -->
+          <div id="turnstileContainer" style="margin-bottom: 1rem; display: flex; justify-content: center;">
+            <div id="cfTurnstileWidget"></div>
+          </div>
+
           <button type="submit" class="btn-primary" style="width: 100%;">登录后台</button>
+          
+          <div style="margin-top: 1rem; text-align: center;">
+            <button type="button" class="btn-secondary" style="width: 100%;" onclick="loginWithPasskey()">
+              🔑 使用 Passkey 零密码登录 (Bitwarden / 触控ID)
+            </button>
+          </div>
         </form>
       </div>
     </div>
@@ -258,7 +270,57 @@
         <!-- Tab 3: Settings -->
         <div id="tab-settings" style="display: none;">
           <form onsubmit="handleSaveSettings(event)">
-            <!-- 1. Notification Channels with Explicit Toggles -->
+            <!-- 1. Passkey WebAuthn Security -->
+            <div class="section-title">🔑 Passkey 硬件密钥无密码登录 (Bitwarden / 触控ID)</div>
+            <div class="channel-box">
+              <div class="channel-header">
+                <label style="font-weight: 600; color: var(--text-primary);">已绑定的 Passkey 设备凭据</label>
+                <button type="button" class="btn-primary" onclick="registerPasskey()">➕ 注册当前设备 Passkey</button>
+              </div>
+              <p style="font-size: 0.85rem; color: var(--text-muted);" id="passkeyStatusText">
+                注册后，登录时可通过 Bitwarden 插件弹窗、TouchID、FaceID 或 YubiKey 直接完成免密无感登录。
+              </p>
+            </div>
+
+            <!-- 2. 2FA TOTP Security -->
+            <div class="section-title">🛡️ 2FA 双因素身份验证 (TOTP)</div>
+            <div class="channel-box">
+              <div class="channel-header">
+                <label style="font-weight: 600; color: var(--text-primary);">身份验证器 (Google Authenticator / Bitwarden 2FA)</label>
+                <label class="checkbox-item"><input type="checkbox" id="chkTotpEnabled"> <span>开启 2FA 验证</span></label>
+              </div>
+              <div class="form-group">
+                <label>TOTP 动态密钥 (Secret Key)</label>
+                <input type="text" id="settingTotpSecret" placeholder="生成或填入 16 位 Base32 TOTP 密钥">
+              </div>
+            </div>
+
+            <!-- 3. Cloudflare Turnstile Security -->
+            <div class="section-title">🤖 Cloudflare Turnstile 人机验证 (默认关闭)</div>
+            <div class="channel-box">
+              <div class="channel-header">
+                <label style="font-weight: 600; color: var(--text-primary);">Turnstile 隐形人机防护</label>
+                <label class="checkbox-item"><input type="checkbox" id="chkTurnstileEnabled"> <span>开启 Turnstile 人机验证</span></label>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.5rem;">
+                <div>
+                  <label style="font-size: 0.8rem; color: var(--text-secondary);">Site Key (站点 Key)</label>
+                  <input type="text" id="settingTurnstileSiteKey" placeholder="例如: 0x4AAAAAAAXxxxx">
+                </div>
+                <div>
+                  <label style="font-size: 0.8rem; color: var(--text-secondary);">Secret Key (密钥)</label>
+                  <input type="password" id="settingTurnstileSecretKey" placeholder="例如: 0x4AAAAAAAXxxxx">
+                </div>
+              </div>
+              <div style="background: rgba(246, 130, 31, 0.08); padding: 0.75rem; border-radius: 6px; border: 1px solid var(--color-accent); margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-secondary);">
+                💡 <strong>Cloudflare 官方 Dev Site Keys 测试秘钥支持：</strong><br>
+                • <code>1x00000000000000000000AA</code> (开发测试 - 总是自动通过验证)<br>
+                • <code>2x00000000000000000000AB</code> (开发测试 - 总是拦截拒绝)<br>
+                • <code>3x00000000000000000000FF</code> (开发测试 - 强制弹出交互式 Challenge 验证)
+              </div>
+            </div>
+
+            <!-- 4. Notification Channels with Explicit Toggles -->
             <div class="section-title">🔔 告警通知渠道设置 (需显式勾选开启)</div>
 
             <!-- Lark / 飞书 -->
@@ -349,7 +411,7 @@
               </div>
             </div>
 
-            <!-- 2. Group Management -->
+            <!-- 5. Group Management -->
             <div class="section-title">📂 监控分组管理</div>
             <div class="form-group">
               <label>当前已有分组列表 (点击标签上的 ✕ 按钮可删除该分组)</label>
@@ -362,7 +424,7 @@
               </div>
             </div>
 
-            <!-- 3. Password Modification with Confirmation -->
+            <!-- 6. Password Modification with Confirmation -->
             <div class="section-title">🔑 修改管理员账号与密码</div>
             <div class="form-group">
               <label>当前旧密码 (修改账号密码时必填)</label>
@@ -383,19 +445,16 @@
               </div>
             </div>
 
-            <!-- 4. Backup & Restore (JSON Import / Export) -->
+            <!-- 7. Backup & Restore (JSON Import / Export) -->
             <div class="section-title">📦 配置备份与导入恢复</div>
             <div class="channel-box">
               <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
                 <button type="button" class="btn-secondary" onclick="exportConfigJson()">📥 导出配置 JSON 备份文件</button>
                 <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">
-                  <input type="file" id="importJsonFile" accept=".json" style="padding: 0.4rem;">
+                  <input type="file" id="importJsonFile" accept=".json">
                   <button type="button" class="btn-primary" onclick="importConfigJson()">📤 校验并恢复导入</button>
                 </div>
               </div>
-              <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem; margin-bottom: 0;">
-                提示：导入配置时系统会自动进行严苛格式校验，仅允许规范的 EdgePulse 配置 JSON 导入。
-              </p>
             </div>
 
             <div style="margin-top: 2rem;">
