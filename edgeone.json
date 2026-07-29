@@ -9,7 +9,7 @@
       "dest": "/functions/api/$1"
     },
     {
-      "src": "^/admin$",
+      "src": "^/admin/?$",
       "dest": "/admin.html"
     },
     {
