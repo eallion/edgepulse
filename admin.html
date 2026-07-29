@@ -48,10 +48,17 @@
       padding: 0.85rem 1rem;
       text-align: left;
       border-bottom: 1px solid var(--border-card);
+      white-space: nowrap;
     }
     .site-table th {
       color: var(--text-secondary);
       font-size: 0.85rem;
+    }
+    .ellipsis-text {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: block;
     }
     .section-title {
       font-family: var(--font-heading);
@@ -180,7 +187,7 @@
                 <th>类型</th>
                 <th>目标地址</th>
                 <th>分组</th>
-                <th>到期监控规则</th>
+                <th>监控项</th>
                 <th>告警渠道</th>
                 <th>操作</th>
               </tr>

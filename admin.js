@@ -491,23 +491,33 @@ function renderSitesTable(sites) {
     const tr = document.createElement('tr');
     const channelsText = (site.alertChannels && site.alertChannels.length > 0) 
       ? site.alertChannels.map(getChannelLabel).join(', ') 
-      : '无 (跟随默认)';
+      : '默认';
 
-    let expiryRulesText = [];
-    if (site.checkDomain) expiryRulesText.push(`域名到期 (${site.domainWarnDays || 30}d)`);
-    if (site.checkSsl) expiryRulesText.push(`SSL到期 (${site.sslWarnDays || 30}d)`);
-    const freqText = site.expiryFrequency === 'monthly' ? '每月' : (site.expiryFrequency === 'weekly' ? '每周' : '每天');
-    const rulesSummary = expiryRulesText.length > 0 ? `${expiryRulesText.join(' + ')} [${freqText}]` : '未开启到期监控';
+    let itemIcons = '';
+    const hasDomain = site.checkDomain || site.enableDomainExpiry;
+    const hasSsl = site.checkSsl || site.enableSslExpiry;
+
+    if (hasDomain) {
+      itemIcons += `<span title="已开启域名到期监控 (${site.domainWarnDays || 30}天)" style="cursor: help; margin-right: 0.3rem;">🌐</span>`;
+    }
+    if (hasSsl) {
+      itemIcons += `<span title="已开启 SSL 证书到期监控 (${site.sslWarnDays || 30}天)" style="cursor: help;">🔒</span>`;
+    }
+    if (!itemIcons) {
+      itemIcons = '<span style="opacity: 0.25;">-</span>';
+    }
+
+    const targetVal = site.url || site.host || site.domain || '-';
 
     tr.innerHTML = `
-      <td><strong>${site.name}</strong></td>
-      <td><span class="badge badge-operational">${site.type.toUpperCase()}</span></td>
-      <td>${site.url || site.host || site.domain || '-'}</td>
-      <td>${site.group || 'default'}</td>
-      <td><span style="font-size: 0.8rem; color: var(--text-secondary);">${rulesSummary}</span></td>
-      <td><span style="font-size: 0.8rem; color: var(--color-accent);">${channelsText}</span></td>
-      <td>
-        <button class="btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; color: var(--color-red);" onclick="deleteSite(${index})">删除</button>
+      <td style="white-space: nowrap;"><strong>${site.name}</strong></td>
+      <td style="white-space: nowrap;"><span class="badge badge-operational">${site.type.toUpperCase()}</span></td>
+      <td style="white-space: nowrap;"><div class="ellipsis-text" style="max-width: 220px;" title="${targetVal}">${targetVal}</div></td>
+      <td style="white-space: nowrap;">${site.group || 'default'}</td>
+      <td style="white-space: nowrap; font-size: 1rem;">${itemIcons}</td>
+      <td style="white-space: nowrap;"><span style="font-size: 0.8rem; color: var(--color-accent);">${channelsText}</span></td>
+      <td style="white-space: nowrap;">
+        <button class="btn-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.8rem; color: var(--color-red); white-space: nowrap;" onclick="deleteSite(${index})">删除</button>
       </td>
     `;
     tbody.appendChild(tr);
