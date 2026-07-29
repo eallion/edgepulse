@@ -181,6 +181,17 @@ header {
   border-color: var(--border-card-bright);
 }
 
+/* No-border styling specifically for Darkmode Theme Button */
+#themeBtn {
+  border: none !important;
+  background: transparent;
+  padding: 0.45rem 0.6rem;
+}
+
+#themeBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
 /* Status Banner */
 .status-banner {
   background: var(--bg-card);
