@@ -30,11 +30,11 @@ function applyTheme(theme) {
   const iconEl = document.getElementById('themeBtnIcon');
   if (iconEl) {
     const labels = {
-      dimmed: '🌙 Dimmed',
-      light: '☀️ Light',
-      dark: '🖤 Dark',
+      dimmed: '🌙',
+      light: '☀️',
+      dark: '🖤',
     };
-    iconEl.textContent = labels[theme] || '🌙 Dimmed';
+    iconEl.textContent = labels[theme] || '🌙';
   }
 }
 
