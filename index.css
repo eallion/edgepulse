@@ -446,6 +446,14 @@ footer a {
   margin-bottom: 1.25rem;
 }
 
+.form-group label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 0.45rem;
+}
+
 /* Cloudflare Kumo UI / Base UI Form Controls */
 input[type="text"],
 input[type="password"],
