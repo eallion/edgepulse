@@ -217,12 +217,14 @@
                 <span>🔒 智能到期监控规则 (<span id="domainLevelBadge">识别中...</span>)</span>
               </div>
               <div class="checkbox-group">
-                <label class="checkbox-item" id="chkDomainItem">
+                <label class="kumo-switch" id="chkDomainItem">
                   <input type="checkbox" id="chkEnableDomainExpiry" checked>
+                  <span class="kumo-switch-track"><span class="kumo-switch-thumb"></span></span>
                   <span>🌐 监控域名到期时间 (根域名专用)</span>
                 </label>
-                <label class="checkbox-item" id="chkSslItem">
+                <label class="kumo-switch" id="chkSslItem">
                   <input type="checkbox" id="chkEnableSslExpiry" checked>
+                  <span class="kumo-switch-track"><span class="kumo-switch-thumb"></span></span>
                   <span>🔒 监控 SSL/TLS 证书到期时间</span>
                 </label>
               </div>
@@ -287,13 +289,17 @@
             </div>
 
             <!-- 1. Notification Channels with Explicit Toggles -->
-            <div class="section-title">🔔 告警通知渠道设置 (需显式勾选开启)</div>
+            <div class="section-title">🔔 告警通知渠道设置 (需显式开启)</div>
 
             <!-- Lark / 飞书 -->
             <div class="channel-box">
               <div class="channel-header">
                 <label style="font-weight: 600; color: var(--text-primary);">🟦 飞书 (Lark) 自定义机器人</label>
-                <label class="checkbox-item"><input type="checkbox" id="chkLarkEnabled"> <span>启用此服务</span></label>
+                <label class="kumo-switch">
+                  <input type="checkbox" id="chkLarkEnabled">
+                  <span class="kumo-switch-track"><span class="kumo-switch-thumb"></span></span>
+                  <span>启用此服务</span>
+                </label>
               </div>
               <input type="url" id="settingLark" placeholder="https://open.feishu.cn/open-apis/bot/v2/hook/xxx">
             </div>
@@ -302,7 +308,11 @@
             <div class="channel-box">
               <div class="channel-header">
                 <label style="font-weight: 600; color: var(--text-primary);">🟩 企业微信 Webhook</label>
-                <label class="checkbox-item"><input type="checkbox" id="chkWechatEnabled"> <span>启用此服务</span></label>
+                <label class="kumo-switch">
+                  <input type="checkbox" id="chkWechatEnabled">
+                  <span class="kumo-switch-track"><span class="kumo-switch-thumb"></span></span>
+                  <span>启用此服务</span>
+                </label>
               </div>
               <input type="url" id="settingWechat" placeholder="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=xxx">
             </div>
@@ -311,7 +321,11 @@
             <div class="channel-box">
               <div class="channel-header">
                 <label style="font-weight: 600; color: var(--text-primary);">🍊 钉钉 (DingTalk) 机器人</label>
-                <label class="checkbox-item"><input type="checkbox" id="chkDingtalkEnabled"> <span>启用此服务</span></label>
+                <label class="kumo-switch">
+                  <input type="checkbox" id="chkDingtalkEnabled">
+                  <span class="kumo-switch-track"><span class="kumo-switch-thumb"></span></span>
+                  <span>启用此服务</span>
+                </label>
               </div>
               <input type="url" id="settingDingtalk" placeholder="https://oapi.dingtalk.com/robot/send?access_token=xxx">
             </div>
@@ -320,7 +334,11 @@
             <div class="channel-box">
               <div class="channel-header">
                 <label style="font-weight: 600; color: var(--text-primary);">✈️ Telegram Bot</label>
-                <label class="checkbox-item"><input type="checkbox" id="chkTelegramEnabled"> <span>启用此服务</span></label>
+                <label class="kumo-switch">
+                  <input type="checkbox" id="chkTelegramEnabled">
+                  <span class="kumo-switch-track"><span class="kumo-switch-thumb"></span></span>
+                  <span>启用此服务</span>
+                </label>
               </div>
               <input type="text" id="settingTelegram" placeholder="格式: TOKEN|CHAT_ID (例如 123456:ABC-DEF|987654321)">
             </div>
@@ -329,7 +347,11 @@
             <div class="channel-box">
               <div class="channel-header">
                 <label style="font-weight: 600; color: var(--text-primary);">📱 Bark 推送 (iOS)</label>
-                <label class="checkbox-item"><input type="checkbox" id="chkBarkEnabled"> <span>启用此服务</span></label>
+                <label class="kumo-switch">
+                  <input type="checkbox" id="chkBarkEnabled">
+                  <span class="kumo-switch-track"><span class="kumo-switch-thumb"></span></span>
+                  <span>启用此服务</span>
+                </label>
               </div>
               <input type="url" id="settingBark" placeholder="https://api.day.app/your_token">
             </div>
@@ -338,7 +360,11 @@
             <div class="channel-box">
               <div class="channel-header">
                 <label style="font-weight: 600; color: var(--text-primary);">🟢 PushPlus (推送加微信公众号推送)</label>
-                <label class="checkbox-item"><input type="checkbox" id="chkPushplusEnabled"> <span>启用此服务</span></label>
+                <label class="kumo-switch">
+                  <input type="checkbox" id="chkPushplusEnabled">
+                  <span class="kumo-switch-track"><span class="kumo-switch-thumb"></span></span>
+                  <span>启用此服务</span>
+                </label>
               </div>
               <input type="text" id="settingPushplus" placeholder="输入 PushPlus Token (在 pushplus.plus 获取)">
             </div>
@@ -347,7 +373,11 @@
             <div class="channel-box">
               <div class="channel-header">
                 <label style="font-weight: 600; color: var(--color-accent);">✉️ Email 邮件通知设置 (SMTP)</label>
-                <label class="checkbox-item"><input type="checkbox" id="chkEmailEnabled"> <span>启用此服务</span></label>
+                <label class="kumo-switch">
+                  <input type="checkbox" id="chkEmailEnabled">
+                  <span class="kumo-switch-track"><span class="kumo-switch-thumb"></span></span>
+                  <span>启用此服务</span>
+                </label>
               </div>
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.5rem;">
                 <div>
@@ -428,7 +458,11 @@
             <div class="channel-box">
               <div class="channel-header">
                 <label style="font-weight: 600; color: var(--text-primary);">身份验证器 (Google Authenticator / Bitwarden 2FA)</label>
-                <label class="checkbox-item"><input type="checkbox" id="chkTotpEnabled"> <span>开启 2FA 验证</span></label>
+                <label class="kumo-switch">
+                  <input type="checkbox" id="chkTotpEnabled">
+                  <span class="kumo-switch-track"><span class="kumo-switch-thumb"></span></span>
+                  <span>开启 2FA 验证</span>
+                </label>
               </div>
               <div class="form-group">
                 <label>TOTP 动态密钥 (Secret Key)</label>
@@ -441,7 +475,11 @@
             <div class="channel-box">
               <div class="channel-header">
                 <label style="font-weight: 600; color: var(--text-primary);">Turnstile 隐形人机防护</label>
-                <label class="checkbox-item"><input type="checkbox" id="chkTurnstileEnabled"> <span>开启 Turnstile 人机验证</span></label>
+                <label class="kumo-switch">
+                  <input type="checkbox" id="chkTurnstileEnabled">
+                  <span class="kumo-switch-track"><span class="kumo-switch-thumb"></span></span>
+                  <span>开启 Turnstile 人机验证</span>
+                </label>
               </div>
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.5rem;">
                 <div>

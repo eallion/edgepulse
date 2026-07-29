@@ -10,6 +10,7 @@
 - 🌐 **多域名动态状态页 (Multi-Domain Status Pages)**：同一套部署服务支持绑定无限个域名（如 `status.a.com`, `status.b.com`），根据访问域名自动匹配展示对应的状态页与专属服务节点。
 - 🎨 **Cloudflare Kumo UI 设计系统 (基于 Base UI 代币)**：
   - 🍊 **Kumo 视觉精美美学**：全站整体采用 Cloudflare Kumo 哑光黑 Obsidian 背景、Cloudflare 标志性橙色 Accent（`#f6821f`）、Base UI 细微 1px 细线边框（`#27272a`）及胶囊圆角元素。
+  - 🎛️ **Kumo Toggle Switch 开启开关**：设置中所有服务开关全面升级为 Cloudflare Kumo 风格的圆角滑块 Toggle Switch，开启滑动时带有 Cloudflare 橙色高亮与 0.25s 贝塞尔曲线过渡。
   - 💬 **全站淘汰原生浏览器 alert/confirm**：全面接入正宗的 **Cloudflare Kumo UI / Base UI Toast 消息通知框**与 **Kumo Confirm 模态确认对话框**，具备极致高颜值的淡入淡出滑移动效与交互感。
   - 🔄 **前后台全局共享持久化**：前台监控面板 (`index.html`) 与后台控制中心 (`admin.html`) 共享 Kumo UI 主题切换偏好（暗黑/浅色），自动写入 `localStorage` 记忆。
   - 📈 包含动态 Sparkline 耗时、30 天可用率条形图（Uptime Bar）、SSL 证书及域名到期倒计时 Badge、自适应移动端与 30s 自动倒计时刷新。
