@@ -85,6 +85,19 @@
       padding: 1rem;
       margin-top: 1rem;
     }
+    .channel-box {
+      background: rgba(255,255,255,0.03);
+      padding: 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-card);
+      margin-bottom: 1rem;
+    }
+    .channel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
   </style>
 </head>
 <body>
@@ -232,7 +245,7 @@
               </select>
             </div>
             <div class="form-group">
-              <label>选择绑定的告警通知服务 (可选，仅展示已配置过的通知服务)</label>
+              <label>选择绑定的告警通知服务 (可选，仅展示已显式开启的通知服务)</label>
               <div class="checkbox-group" id="availableAlertChannels">
                 <!-- Dynamically filled -->
               </div>
@@ -244,52 +257,89 @@
         <!-- Tab 3: Settings -->
         <div id="tab-settings" style="display: none;">
           <form onsubmit="handleSaveSettings(event)">
-            <!-- 1. Notification Channels -->
-            <div class="section-title">🔔 告警通知渠道设置</div>
-            <div class="form-group">
-              <label>飞书 (Lark) 自定义机器人 Webhook</label>
+            <!-- 1. Notification Channels with Explicit Toggles -->
+            <div class="section-title">🔔 告警通知渠道设置 (需显式勾选开启)</div>
+
+            <!-- Lark / 飞书 -->
+            <div class="channel-box">
+              <div class="channel-header">
+                <label style="font-weight: 600; color: var(--text-primary);">🟦 飞书 (Lark) 自定义机器人</label>
+                <label class="checkbox-item"><input type="checkbox" id="chkLarkEnabled"> <span>启用此服务</span></label>
+              </div>
               <input type="url" id="settingLark" placeholder="https://open.feishu.cn/open-apis/bot/v2/hook/xxx">
             </div>
-            <div class="form-group">
-              <label>企业微信 Webhook</label>
+
+            <!-- WeChat / 企业微信 -->
+            <div class="channel-box">
+              <div class="channel-header">
+                <label style="font-weight: 600; color: var(--text-primary);">🟩 企业微信 Webhook</label>
+                <label class="checkbox-item"><input type="checkbox" id="chkWechatEnabled"> <span>启用此服务</span></label>
+              </div>
               <input type="url" id="settingWechat" placeholder="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=xxx">
             </div>
-            <div class="form-group">
-              <label>钉钉 (DingTalk) 机器人 Webhook</label>
+
+            <!-- DingTalk / 钉钉 -->
+            <div class="channel-box">
+              <div class="channel-header">
+                <label style="font-weight: 600; color: var(--text-primary);">🍊 钉钉 (DingTalk) 机器人</label>
+                <label class="checkbox-item"><input type="checkbox" id="chkDingtalkEnabled"> <span>启用此服务</span></label>
+              </div>
               <input type="url" id="settingDingtalk" placeholder="https://oapi.dingtalk.com/robot/send?access_token=xxx">
             </div>
-            <div class="form-group">
-              <label>Telegram Bot Token 与 Chat ID (格式: TOKEN|CHAT_ID)</label>
-              <input type="text" id="settingTelegram" placeholder="例如: 123456:ABC-DEF|987654321">
+
+            <!-- Telegram -->
+            <div class="channel-box">
+              <div class="channel-header">
+                <label style="font-weight: 600; color: var(--text-primary);">✈️ Telegram Bot</label>
+                <label class="checkbox-item"><input type="checkbox" id="chkTelegramEnabled"> <span>启用此服务</span></label>
+              </div>
+              <input type="text" id="settingTelegram" placeholder="格式: TOKEN|CHAT_ID (例如 123456:ABC-DEF|987654321)">
             </div>
-            <div class="form-group">
-              <label>Bark 推送地址 (iOS)</label>
+
+            <!-- Bark (iOS) -->
+            <div class="channel-box">
+              <div class="channel-header">
+                <label style="font-weight: 600; color: var(--text-primary);">📱 Bark 推送 (iOS)</label>
+                <label class="checkbox-item"><input type="checkbox" id="chkBarkEnabled"> <span>启用此服务</span></label>
+              </div>
               <input type="url" id="settingBark" placeholder="https://api.day.app/your_token">
             </div>
+
+            <!-- PushPlus (推送加) -->
+            <div class="channel-box">
+              <div class="channel-header">
+                <label style="font-weight: 600; color: var(--text-primary);">🟢 PushPlus (推送加微信公众号推送)</label>
+                <label class="checkbox-item"><input type="checkbox" id="chkPushplusEnabled"> <span>启用此服务</span></label>
+              </div>
+              <input type="text" id="settingPushplus" placeholder="输入 PushPlus Token (在 pushplus.plus 获取)">
+            </div>
             
-            <!-- Email / SMTP Settings -->
-            <div class="form-group" style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-card);">
-              <label style="font-weight: 600; color: var(--color-accent); margin-bottom: 0.5rem;">✉️ Email 邮件通知设置 (SMTP / Resend API)</label>
+            <!-- Email / SMTP -->
+            <div class="channel-box">
+              <div class="channel-header">
+                <label style="font-weight: 600; color: var(--color-accent);">✉️ Email 邮件通知设置 (SMTP)</label>
+                <label class="checkbox-item"><input type="checkbox" id="chkEmailEnabled"> <span>启用此服务</span></label>
+              </div>
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.5rem;">
                 <div>
-                  <label>SMTP 服务器 (Host)</label>
+                  <label style="font-size: 0.8rem; color: var(--text-secondary);">SMTP 服务器 (Host)</label>
                   <input type="text" id="settingSmtpHost" placeholder="如 smtp.qq.com 或 smtp.gmail.com">
                 </div>
                 <div>
-                  <label>SMTP 端口 (Port)</label>
+                  <label style="font-size: 0.8rem; color: var(--text-secondary);">SMTP 端口 (Port)</label>
                   <input type="number" id="settingSmtpPort" placeholder="默认 465 或 587" value="465">
                 </div>
                 <div>
-                  <label>发件人账号 (User)</label>
+                  <label style="font-size: 0.8rem; color: var(--text-secondary);">发件人账号 (User)</label>
                   <input type="text" id="settingSmtpUser" placeholder="例如: your-email@qq.com">
                 </div>
                 <div>
-                  <label>发件人密码/授权码 (Pass)</label>
+                  <label style="font-size: 0.8rem; color: var(--text-secondary);">发件人密码/授权码 (Pass)</label>
                   <input type="password" id="settingSmtpPass" placeholder="邮箱授权码或应用密码">
                 </div>
               </div>
               <div style="margin-top: 0.75rem;">
-                <label>接收告警的邮箱地址 (Receiver Email)</label>
+                <label style="font-size: 0.8rem; color: var(--text-secondary);">接收告警的邮箱地址 (Receiver Email)</label>
                 <input type="email" id="settingEmailReceiver" placeholder="接收故障/恢复通知的邮箱地址">
               </div>
             </div>

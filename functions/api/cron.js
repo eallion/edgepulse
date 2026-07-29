@@ -262,7 +262,7 @@ async function dispatchAlerts(alerts, alertConfig) {
     const shouldSend = (channelId) => !channels || channels.length === 0 || channels.includes(channelId);
 
     // 1. Lark / 飞书 Webhook
-    if (shouldSend('lark') && alertConfig.larkWebhook) {
+    if (shouldSend('lark') && (alertConfig.larkEnabled ?? true) && alertConfig.larkWebhook) {
       await fetch(alertConfig.larkWebhook, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -280,7 +280,7 @@ async function dispatchAlerts(alerts, alertConfig) {
     }
 
     // 2. Enterprise WeChat / 企业微信
-    if (shouldSend('wechat') && alertConfig.wechatWebhook) {
+    if (shouldSend('wechat') && (alertConfig.wechatEnabled ?? true) && alertConfig.wechatWebhook) {
       await fetch(alertConfig.wechatWebhook, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -292,7 +292,7 @@ async function dispatchAlerts(alerts, alertConfig) {
     }
 
     // 3. DingTalk / 钉钉
-    if (shouldSend('dingtalk') && alertConfig.dingtalkWebhook) {
+    if (shouldSend('dingtalk') && (alertConfig.dingtalkEnabled ?? true) && alertConfig.dingtalkWebhook) {
       await fetch(alertConfig.dingtalkWebhook, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -304,7 +304,7 @@ async function dispatchAlerts(alerts, alertConfig) {
     }
 
     // 4. Telegram Bot
-    if (shouldSend('telegram') && alertConfig.telegramToken && alertConfig.telegramChatId) {
+    if (shouldSend('telegram') && (alertConfig.telegramEnabled ?? true) && alertConfig.telegramToken && alertConfig.telegramChatId) {
       await fetch(`https://api.telegram.org/bot${alertConfig.telegramToken}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -317,14 +317,27 @@ async function dispatchAlerts(alerts, alertConfig) {
     }
 
     // 5. Bark (iOS Push)
-    if (shouldSend('bark') && alertConfig.barkUrl) {
+    if (shouldSend('bark') && (alertConfig.barkEnabled ?? true) && alertConfig.barkUrl) {
       const barkEndpoint = `${alertConfig.barkUrl.replace(/\/$/, '')}/${encodeURIComponent(title)}/${encodeURIComponent(message)}`;
       await fetch(barkEndpoint).catch(() => {});
     }
 
-    // 6. Email / Resend / SMTP Notification
-    if (shouldSend('email') && alertConfig.email && alertConfig.email.receiver) {
-      // If Resend API key or Cloud Function SMTP is available
+    // 6. PushPlus (推送加 微信公众号推送)
+    if (shouldSend('pushplus') && (alertConfig.pushplusEnabled ?? true) && alertConfig.pushplusToken) {
+      await fetch('http://www.pushplus.plus/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: alertConfig.pushplusToken,
+          title,
+          content: message,
+          template: 'html',
+        }),
+      }).catch(() => {});
+    }
+
+    // 7. Email / Resend / SMTP Notification
+    if (shouldSend('email') && (alertConfig.emailEnabled ?? true) && alertConfig.email && alertConfig.email.receiver) {
       const emailPayload = {
         to: alertConfig.email.receiver,
         subject: title,
@@ -334,7 +347,6 @@ async function dispatchAlerts(alerts, alertConfig) {
         </div>`,
       };
       
-      // Dispatch via Cloud Function SMTP handler or Resend API
       await fetch('/api/auth/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
