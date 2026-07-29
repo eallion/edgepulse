@@ -270,57 +270,7 @@
         <!-- Tab 3: Settings -->
         <div id="tab-settings" style="display: none;">
           <form onsubmit="handleSaveSettings(event)">
-            <!-- 1. Passkey WebAuthn Security -->
-            <div class="section-title">🔑 Passkey 硬件密钥无密码登录 (Bitwarden / 触控ID)</div>
-            <div class="channel-box">
-              <div class="channel-header">
-                <label style="font-weight: 600; color: var(--text-primary);">已绑定的 Passkey 设备凭据</label>
-                <button type="button" class="btn-primary" onclick="registerPasskey()">➕ 注册当前设备 Passkey</button>
-              </div>
-              <p style="font-size: 0.85rem; color: var(--text-muted);" id="passkeyStatusText">
-                注册后，登录时可通过 Bitwarden 插件弹窗、TouchID、FaceID 或 YubiKey 直接完成免密无感登录。
-              </p>
-            </div>
-
-            <!-- 2. 2FA TOTP Security -->
-            <div class="section-title">🛡️ 2FA 双因素身份验证 (TOTP)</div>
-            <div class="channel-box">
-              <div class="channel-header">
-                <label style="font-weight: 600; color: var(--text-primary);">身份验证器 (Google Authenticator / Bitwarden 2FA)</label>
-                <label class="checkbox-item"><input type="checkbox" id="chkTotpEnabled"> <span>开启 2FA 验证</span></label>
-              </div>
-              <div class="form-group">
-                <label>TOTP 动态密钥 (Secret Key)</label>
-                <input type="text" id="settingTotpSecret" placeholder="生成或填入 16 位 Base32 TOTP 密钥">
-              </div>
-            </div>
-
-            <!-- 3. Cloudflare Turnstile Security -->
-            <div class="section-title">🤖 Cloudflare Turnstile 人机验证 (默认关闭)</div>
-            <div class="channel-box">
-              <div class="channel-header">
-                <label style="font-weight: 600; color: var(--text-primary);">Turnstile 隐形人机防护</label>
-                <label class="checkbox-item"><input type="checkbox" id="chkTurnstileEnabled"> <span>开启 Turnstile 人机验证</span></label>
-              </div>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.5rem;">
-                <div>
-                  <label style="font-size: 0.8rem; color: var(--text-secondary);">Site Key (站点 Key)</label>
-                  <input type="text" id="settingTurnstileSiteKey" placeholder="例如: 0x4AAAAAAAXxxxx">
-                </div>
-                <div>
-                  <label style="font-size: 0.8rem; color: var(--text-secondary);">Secret Key (密钥)</label>
-                  <input type="password" id="settingTurnstileSecretKey" placeholder="例如: 0x4AAAAAAAXxxxx">
-                </div>
-              </div>
-              <div style="background: rgba(246, 130, 31, 0.08); padding: 0.75rem; border-radius: 6px; border: 1px solid var(--color-accent); margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-secondary);">
-                💡 <strong>Cloudflare 官方 Dev Site Keys 测试秘钥支持：</strong><br>
-                • <code>1x00000000000000000000AA</code> (开发测试 - 总是自动通过验证)<br>
-                • <code>2x00000000000000000000AB</code> (开发测试 - 总是拦截拒绝)<br>
-                • <code>3x00000000000000000000FF</code> (开发测试 - 强制弹出交互式 Challenge 验证)
-              </div>
-            </div>
-
-            <!-- 4. Notification Channels with Explicit Toggles -->
+            <!-- 1. Notification Channels with Explicit Toggles -->
             <div class="section-title">🔔 告警通知渠道设置 (需显式勾选开启)</div>
 
             <!-- Lark / 飞书 -->
@@ -411,7 +361,7 @@
               </div>
             </div>
 
-            <!-- 5. Group Management -->
+            <!-- 2. Group Management -->
             <div class="section-title">📂 监控分组管理</div>
             <div class="form-group">
               <label>当前已有分组列表 (点击标签上的 ✕ 按钮可删除该分组)</label>
@@ -424,7 +374,7 @@
               </div>
             </div>
 
-            <!-- 6. Password Modification with Confirmation -->
+            <!-- 3. Password Modification with Confirmation -->
             <div class="section-title">🔑 修改管理员账号与密码</div>
             <div class="form-group">
               <label>当前旧密码 (修改账号密码时必填)</label>
@@ -442,6 +392,56 @@
               <div class="form-group">
                 <label>确认新密码 (Confirm New Password)</label>
                 <input type="password" id="settingConfirmNewPassword" placeholder="重新输入一遍新密码">
+              </div>
+            </div>
+
+            <!-- 4. Passkey WebAuthn Security -->
+            <div class="section-title">🔑 Passkey 硬件密钥无密码登录 (Bitwarden / 触控ID)</div>
+            <div class="channel-box">
+              <div class="channel-header">
+                <label style="font-weight: 600; color: var(--text-primary);">已绑定的 Passkey 设备凭据</label>
+                <button type="button" class="btn-primary" onclick="registerPasskey()">➕ 注册当前设备 Passkey</button>
+              </div>
+              <p style="font-size: 0.85rem; color: var(--text-muted);" id="passkeyStatusText">
+                注册后，登录时可通过 Bitwarden 插件弹窗、TouchID、FaceID 或 YubiKey 直接完成免密无感登录。
+              </p>
+            </div>
+
+            <!-- 5. 2FA TOTP Security -->
+            <div class="section-title">🛡️ 2FA 双因素身份验证 (TOTP)</div>
+            <div class="channel-box">
+              <div class="channel-header">
+                <label style="font-weight: 600; color: var(--text-primary);">身份验证器 (Google Authenticator / Bitwarden 2FA)</label>
+                <label class="checkbox-item"><input type="checkbox" id="chkTotpEnabled"> <span>开启 2FA 验证</span></label>
+              </div>
+              <div class="form-group">
+                <label>TOTP 动态密钥 (Secret Key)</label>
+                <input type="text" id="settingTotpSecret" placeholder="生成或填入 16 位 Base32 TOTP 密钥">
+              </div>
+            </div>
+
+            <!-- 6. Cloudflare Turnstile Security -->
+            <div class="section-title">🤖 Cloudflare Turnstile 人机验证 (默认关闭)</div>
+            <div class="channel-box">
+              <div class="channel-header">
+                <label style="font-weight: 600; color: var(--text-primary);">Turnstile 隐形人机防护</label>
+                <label class="checkbox-item"><input type="checkbox" id="chkTurnstileEnabled"> <span>开启 Turnstile 人机验证</span></label>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.5rem;">
+                <div>
+                  <label style="font-size: 0.8rem; color: var(--text-secondary);">Site Key (站点 Key)</label>
+                  <input type="text" id="settingTurnstileSiteKey" placeholder="例如: 0x4AAAAAAAXxxxx">
+                </div>
+                <div>
+                  <label style="font-size: 0.8rem; color: var(--text-secondary);">Secret Key (密钥)</label>
+                  <input type="password" id="settingTurnstileSecretKey" placeholder="例如: 0x4AAAAAAAXxxxx">
+                </div>
+              </div>
+              <div style="background: rgba(246, 130, 31, 0.08); padding: 0.75rem; border-radius: 6px; border: 1px solid var(--color-accent); margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-secondary);">
+                💡 <strong>Cloudflare 官方 Dev Site Keys 测试秘钥支持：</strong><br>
+                • <code>1x00000000000000000000AA</code> (开发测试 - 总是自动通过验证)<br>
+                • <code>2x00000000000000000000AB</code> (开发测试 - 总是拦截拒绝)<br>
+                • <code>3x00000000000000000000FF</code> (开发测试 - 强制弹出交互式 Challenge 验证)
               </div>
             </div>
 
