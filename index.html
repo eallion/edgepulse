@@ -26,32 +26,33 @@
       </div>
     </header>
 
-    <!-- System Banner -->
-    <section class="status-banner" id="statusBanner">
-      <div class="banner-status-indicator">
+    <!-- Consolidated Hero Status & Metrics Banner -->
+    <section class="status-hero-card" id="statusBanner">
+      <div class="hero-left">
         <div class="status-pulse-dot operational" id="statusDot"></div>
-        <div class="banner-text">
-          <h2 id="overallStatusText">系统所有服务运行正常</h2>
-          <p id="lastCheckTime" style="color: var(--text-muted); font-size: 0.85rem;">最后更新: 刚刚</p>
+        <div class="hero-status-info">
+          <h2 id="overallStatusText">所有系统与服务运行正常</h2>
+          <p id="lastCheckTime">最后更新: 刚刚</p>
+        </div>
+      </div>
+
+      <div class="hero-right-metrics">
+        <div class="metric-inline-item">
+          <span class="metric-inline-label">监控节点</span>
+          <span class="metric-inline-value" id="totalSitesCount">-</span>
+        </div>
+        <div class="metric-inline-divider"></div>
+        <div class="metric-inline-item">
+          <span class="metric-inline-label">平均延迟</span>
+          <span class="metric-inline-value" id="avgLatencyValue">- ms</span>
+        </div>
+        <div class="metric-inline-divider"></div>
+        <div class="metric-inline-item">
+          <span class="metric-inline-label">30 天可用率</span>
+          <span class="metric-inline-value" id="overallSlaValue">99.98%</span>
         </div>
       </div>
     </section>
-
-    <!-- Metrics Cards Grid -->
-    <div class="metrics-grid">
-      <div class="metric-card">
-        <div class="metric-title">监控节点</div>
-        <div class="metric-value" id="totalSitesCount">-</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-title">平均延迟</div>
-        <div class="metric-value" id="avgLatencyValue">- ms</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-title">30 天可用率</div>
-        <div class="metric-value" id="overallSlaValue">99.98%</div>
-      </div>
-    </div>
 
     <!-- Main Service List Section -->
     <main id="serviceListContainer">

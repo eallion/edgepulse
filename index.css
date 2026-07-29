@@ -189,30 +189,34 @@ header {
   border-color: var(--color-red);
 }
 
-/* Status Banner */
-.status-banner {
+/* Integrated Single Hero Status & Metrics Card */
+.status-hero-card {
   background: var(--bg-card);
   border: 1px solid var(--border-card);
   border-radius: 16px;
-  padding: 1.5rem 2rem;
+  padding: 1.25rem 1.75rem;
   margin-bottom: 2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 1.5rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  flex-wrap: wrap;
 }
 
-.status-title {
+.hero-left {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.85rem;
+  flex: 1;
+  min-width: 260px;
 }
 
 .status-pulse-dot {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  position: relative;
+  flex-shrink: 0;
 }
 
 .status-pulse-dot.operational {
@@ -230,67 +234,67 @@ header {
   box-shadow: 0 0 12px var(--color-red);
 }
 
-.status-text {
+.hero-status-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.hero-status-info h2 {
   font-family: var(--font-heading);
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   font-weight: 600;
   color: var(--text-primary);
+  line-height: 1.3;
+  margin: 0;
 }
 
-.last-updated {
-  font-size: 0.85rem;
+.hero-status-info p {
+  font-size: 0.8rem;
   color: var(--text-muted);
+  margin: 0.2rem 0 0 0;
+  line-height: 1.2;
 }
 
-/* Metrics Grid Header Cards */
-.metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1rem;
-  margin-bottom: 2rem;
+/* Right-aligned Metrics inside Hero Card */
+.hero-right-metrics {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  background: var(--bg-btn-secondary);
+  border: 1px solid var(--border-card-bright);
+  padding: 0.65rem 1.25rem;
+  border-radius: 12px;
 }
 
-.metric-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-card);
-  border-radius: 14px;
-  padding: 1.25rem 1.5rem;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+.metric-inline-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
 }
 
-.metric-card:hover {
-  border-color: var(--border-card-bright);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-}
-
-.metric-card::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--color-accent), transparent);
-  opacity: 0.6;
-}
-
-.metric-title {
-  font-size: 0.85rem;
+.metric-inline-label {
+  font-size: 0.75rem;
   color: var(--text-secondary);
   font-weight: 500;
-  margin-bottom: 0.5rem;
+  line-height: 1.2;
 }
 
-.metric-value {
+.metric-inline-value {
   font-family: var(--font-mono);
-  font-size: 1.75rem;
+  font-size: 1.15rem;
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.02em;
+  margin-top: 0.15rem;
+  line-height: 1.2;
+}
+
+.metric-inline-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--border-card-bright);
+  opacity: 0.6;
 }
 
 /* Tag Badges for SSL & Domain Expiry */
