@@ -29,20 +29,24 @@ async function handleLogin(context) {
 
   try {
     const body = await request.json();
-    const { username, password } = body;
+    const inputUser = (body.username || '').trim();
+    const inputPass = (body.password || '').trim();
 
     // Fetch stored auth info or default to admin / admin
     let authConfig = kv ? await kv.get('config:auth', 'json') : null;
-    if (!authConfig) {
+    if (!authConfig || !authConfig.username) {
       authConfig = { username: 'admin', password: 'admin' };
     }
 
-    if (username === authConfig.username && password === authConfig.password) {
-      const token = btoa(`${username}:${password}:${Date.now()}`);
+    const targetUser = (authConfig.username || 'admin').trim();
+    const targetPass = (authConfig.password || 'admin').trim();
+
+    if (inputUser === targetUser && inputPass === targetPass) {
+      const token = btoa(`${inputUser}:${inputPass}:${Date.now()}`);
       return new Response(JSON.stringify({
         success: true,
         token,
-        username: authConfig.username,
+        username: targetUser,
       }), {
         status: 200,
         headers: {

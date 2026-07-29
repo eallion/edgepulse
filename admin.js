@@ -96,8 +96,16 @@ function isRootDomain(hostname) {
 }
 
 function onUrlOrHostInput() {
-  const urlVal = document.getElementById('siteUrl').value;
-  const domainVal = document.getElementById('siteDomain').value;
+  const siteUrlEl = document.getElementById('siteUrl');
+  const siteDomainEl = document.getElementById('siteDomain');
+  const badgeEl = document.getElementById('domainLevelBadge');
+  const chkDomainItem = document.getElementById('chkDomainItem');
+  const domainWarnDaysGroup = document.getElementById('domainWarnDaysGroup');
+
+  if (!siteUrlEl || !badgeEl) return;
+
+  const urlVal = siteUrlEl.value || '';
+  const domainVal = siteDomainEl ? siteDomainEl.value || '' : '';
   const targetStr = urlVal || domainVal || '';
 
   let hostname = '';
@@ -108,21 +116,19 @@ function onUrlOrHostInput() {
   }
 
   const isApex = isRootDomain(hostname);
-  const badgeEl = document.getElementById('domainLevelBadge');
-  const chkDomainItem = document.getElementById('chkDomainItem');
-  const domainWarnDaysGroup = document.getElementById('domainWarnDaysGroup');
 
   if (isApex && hostname) {
     badgeEl.textContent = '根域名 (Apex Domain)';
     badgeEl.style.color = 'var(--color-green)';
-    chkDomainItem.style.display = 'flex';
-    domainWarnDaysGroup.style.display = 'block';
+    if (chkDomainItem) chkDomainItem.style.display = 'flex';
+    if (domainWarnDaysGroup) domainWarnDaysGroup.style.display = 'block';
   } else if (hostname) {
     badgeEl.textContent = '子域名 (Subdomain - 仅监控 SSL 证书)';
     badgeEl.style.color = 'var(--color-accent)';
-    chkDomainItem.style.display = 'none';
-    domainWarnDaysGroup.style.display = 'none';
-    document.getElementById('chkEnableDomainExpiry').checked = false;
+    if (chkDomainItem) chkDomainItem.style.display = 'none';
+    if (domainWarnDaysGroup) domainWarnDaysGroup.style.display = 'none';
+    const chkEnableDomain = document.getElementById('chkEnableDomainExpiry');
+    if (chkEnableDomain) chkEnableDomain.checked = false;
   } else {
     badgeEl.textContent = '识别中...';
     badgeEl.style.color = 'var(--text-muted)';
