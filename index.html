@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EdgePulse - 边缘在线监控与服务状态</title>
+  <meta name="description" content="基于 EdgeOne Makers 构建的超低延时、全球多节点 Serverless 状态监控与 Status Page 系统">
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="brand">
+        <div class="brand-logo" id="appLogo">⚡</div>
+        <div class="brand-info">
+          <h1 id="appTitle">EdgePulse Status</h1>
+          <p id="appAnnouncement">正在加载系统状态...</p>
+        </div>
+      </div>
+      <div class="header-controls">
+        <button class="refresh-btn" id="refreshBtn" onclick="fetchStatus()">
+          <span>🔄 刷新</span>
+          <span id="countdownText">(30s)</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- System Banner -->
+    <section class="status-banner" id="statusBanner">
+      <div class="banner-status-indicator">
+        <div class="status-pulse-dot operational" id="statusDot"></div>
+        <div class="banner-text">
+          <h2 id="overallStatusText">系统所有服务运行正常 (All Systems Operational)</h2>
+          <p id="lastCheckTime" style="color: var(--text-muted); font-size: 0.85rem;">最后更新: 刚刚</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Metrics Cards Grid -->
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-title">监控节点数</div>
+        <div class="metric-value" id="totalSitesCount">-</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">平均响应延迟</div>
+        <div class="metric-value" id="avgLatencyValue">- ms</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">30 天平均 SLA 可用率</div>
+        <div class="metric-value" id="overallSlaValue">99.98%</div>
+      </div>
+    </div>
+
+    <!-- Main Service List Section -->
+    <main id="serviceListContainer">
+      <!-- Dynamic Service Cards Rendered by JS -->
+    </main>
+
+    <!-- Footer -->
+    <footer>
+      <p>Powered by ⚡ <strong>EdgePulse</strong> on <a href="https://cloud.tencent.com/document/product/1552/127365" target="_blank" rel="noopener">Tencent EdgeOne Makers</a></p>
+    </footer>
+  </div>
+
+  <script src="index.js"></script>
+</body>
+</html>

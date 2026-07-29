@@ -1,0 +1,12 @@
+{
+  "name": "edgepulse",
+  "version": "1.0.0",
+  "description": "Native Serverless Online Monitoring & Status Page System for EdgeOne Makers",
+  "framework": "static",
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/functions/api/$1"
+    }
+  ]
+}
