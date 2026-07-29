@@ -1,8 +1,17 @@
 /**
  * EdgeOne Edge Function: /api/config
  * Configuration Management API for Sites, Multi-Domain Status Pages, and Webhook Alert channels.
- * Authenticates via session token or API Key.
+ * Features in-memory fallback store for local dev server to guarantee persistence across requests.
  */
+
+// In-memory store fallback when KV is not bound (e.g. local dev server)
+let inMemoryConfig = {
+  title: 'EdgePulse System Status',
+  icp: '',
+  sites: [],
+  alerts: {},
+  groups: ['default'],
+};
 
 export async function onRequest(context) {
   return handleConfig(context);
@@ -34,8 +43,6 @@ async function handleConfig(context) {
   // Auth check for modifying methods (POST, PUT, DELETE)
   if (request.method !== 'GET') {
     const authHeader = request.headers.get('Authorization') || request.headers.get('X-API-Key') || '';
-    
-    // Accept valid Bearer tokens or API Key
     if (!authHeader) {
       return new Response(JSON.stringify({ error: 'Unauthorized: Missing Authorization Token' }), {
         status: 401,
@@ -46,16 +53,14 @@ async function handleConfig(context) {
 
   try {
     if (request.method === 'GET') {
-      // Read configuration from KV or memory fallback
       let config = kv ? await kv.get('config', 'json') : null;
       if (!config) {
-        config = {
-          title: 'EdgePulse System Status',
-          sites: [],
-          alerts: {},
-          groups: ['default'],
-        };
+        config = inMemoryConfig;
+      } else {
+        // Sync inMemoryConfig with KV
+        inMemoryConfig = config;
       }
+
       return new Response(JSON.stringify(config), {
         status: 200,
         headers: corsHeaders,
@@ -64,8 +69,15 @@ async function handleConfig(context) {
 
     if (request.method === 'POST' || request.method === 'PUT') {
       const body = await request.json();
+
+      // Always update in-memory store for local dev server
+      inMemoryConfig = {
+        ...inMemoryConfig,
+        ...body,
+      };
+
       if (kv) {
-        await kv.put('config', JSON.stringify(body));
+        await kv.put('config', JSON.stringify(inMemoryConfig));
         
         // Handle multi-domain mappings if provided
         if (body.domains && Array.isArray(body.domains)) {
@@ -75,7 +87,7 @@ async function handleConfig(context) {
         }
       }
 
-      return new Response(JSON.stringify({ success: true, message: 'Configuration saved successfully' }), {
+      return new Response(JSON.stringify({ success: true, message: 'Configuration saved successfully', config: inMemoryConfig }), {
         status: 200,
         headers: corsHeaders,
       });

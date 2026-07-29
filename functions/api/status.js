@@ -1,7 +1,7 @@
 /**
  * EdgeOne Edge Function: /api/status
  * Serves current status, uptime SLA %, and 24h history metrics to the frontend UI.
- * Supports Multi-Domain matching via request Host header.
+ * Supports Multi-Domain matching via request Host header and fallback for dev server persistence.
  */
 
 export async function onRequest(context) {
@@ -17,8 +17,8 @@ async function handleStatusRequest(context) {
     const request = context?.request || {};
     const url = request.url ? new URL(request.url) : new URL('http://localhost');
     const host = (request.headers && request.headers.get('host')) || url.hostname;
+    const kv = typeof MONITOR_KV !== 'undefined' ? MONITOR_KV : (typeof globalThis !== 'undefined' && globalThis.MONITOR_KV ? globalThis.MONITOR_KV : null);
 
-    // Guard global KV variable
     let globalConfig = null;
     let pageConfig = null;
     let sites = [];
@@ -56,35 +56,33 @@ async function handleStatusRequest(context) {
         sites = allSites;
       }
     } else {
-      // Mock data for initial local dev preview before KV binding
-      sites = getMockSites();
-      statusMap = getMockStatusMap();
+      // Local dev server fallback: try fetching /api/config internally
+      try {
+        const internalConfigRes = await fetch(new URL('/api/config', url.origin).toString());
+        if (internalConfigRes.ok) {
+          globalConfig = await internalConfigRes.json();
+        }
+      } catch (e) {}
+
       pageConfig = {
-        id: 'default',
-        title: 'EdgePulse System Status',
-        announcement: 'Welcome to EdgePulse. All edge nodes and services are operating normally.',
+        title: globalConfig?.title || 'EdgePulse System Status',
+        logo: globalConfig?.logo || '',
+        announcement: globalConfig?.announcement || '',
       };
+      sites = globalConfig?.sites || getMockSites();
     }
 
-    // Attach latest status snapshot & history to sites
+    // Process site metrics
     const resultSites = sites.map(site => {
-      const liveStatus = statusMap[site.id] || {
-        status: 'up',
-        latency: 45,
-        lastChecked: new Date().toISOString(),
-        uptime30d: 99.95,
-        history24h: Array.from({ length: 24 }, (_, i) => Math.floor(30 + Math.random() * 30)),
-        sslExpiryDays: site.url?.startsWith('https') ? 45 : null,
-        domainExpiryDays: site.domain ? 120 : null,
-      };
-
+      const snap = statusMap[site.id] || { status: 'operational', latency: 42, history: [] };
       return {
         ...site,
-        ...liveStatus,
+        status: snap.status || 'operational',
+        latency: snap.latency || 42,
+        history: snap.history || getMockHistory(),
       };
     });
 
-    // Calculate global overall system status
     let overallStatus = 'operational';
     if (resultSites.some(s => s.status === 'down')) {
       overallStatus = 'down';
@@ -121,47 +119,22 @@ async function handleStatusRequest(context) {
   }
 }
 
-// Fallback mock sites for dev preview
 function getMockSites() {
   return [
-    {
-      id: 'site-1',
-      name: 'Main Website & Portal',
-      url: 'https://example.com',
-      type: 'http',
-      group: 'Core Services',
-    },
-    {
-      id: 'site-2',
-      name: 'Edge API Gateway',
-      url: 'https://api.example.com/health',
-      type: 'http',
-      group: 'Core Services',
-      keyword: 'ok',
-    },
-    {
-      id: 'site-3',
-      name: 'Primary VPS Host (ICMP)',
-      host: '1.1.1.1',
-      type: 'icmp',
-      group: 'Infrastructure',
-    },
-    {
-      id: 'site-4',
-      name: 'Database Node (TCP 3306)',
-      host: 'db.example.com',
-      port: 3306,
-      type: 'tcp',
-      group: 'Infrastructure',
-    },
+    { id: 'site-1', name: '官网主站 (Main Web)', type: 'http', url: 'https://demo.eallion.com', group: 'default', checkDomain: true, checkSsl: true },
+    { id: 'site-2', name: 'API 网关服务', type: 'http', url: 'https://demo.eallion.com/api/status', group: 'default', checkDomain: false, checkSsl: true },
+    { id: 'site-3', name: '香港 VPS 探针', type: 'icmp', host: '1.1.1.1', group: 'default', checkDomain: false, checkSsl: false }
   ];
 }
 
-function getMockStatusMap() {
-  return {
-    'site-1': { status: 'up', latency: 32, lastChecked: new Date().toISOString(), uptime30d: 100.0, history24h: [30,32,31,29,35,33,32,30,31,34,32,33,31,30,32,31,33,32,30,31,32,33,31,32], sslExpiryDays: 85, domainExpiryDays: 320 },
-    'site-2': { status: 'up', latency: 48, lastChecked: new Date().toISOString(), uptime30d: 99.98, history24h: [45,48,50,47,49,48,46,47,48,51,49,48,47,46,48,49,48,47,46,48,49,48,47,48], sslExpiryDays: 42, domainExpiryDays: 180 },
-    'site-3': { status: 'up', latency: 18, lastChecked: new Date().toISOString(), uptime30d: 99.90, history24h: [18,19,18,17,18,19,18,17,18,19,18,17,18,19,18,17,18,19,18,17,18,19,18,18] },
-    'site-4': { status: 'up', latency: 12, lastChecked: new Date().toISOString(), uptime30d: 100.0, history24h: [12,12,13,12,11,12,12,13,12,12,11,12,13,12,12,11,12,12,13,12,11,12,12,12] },
-  };
+function getMockHistory() {
+  const history = [];
+  for (let i = 0; i < 30; i++) {
+    history.push({
+      date: new Date(Date.now() - (29 - i) * 86400000).toISOString().split('T')[0],
+      status: 'operational',
+      uptimePct: 100,
+    });
+  }
+  return history;
 }
