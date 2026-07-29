@@ -1,7 +1,7 @@
 /**
  * EdgePulse Admin Dashboard Logic
  * Powered by Cloudflare Kumo UI / Base UI Tokens.
- * Supports Title, Online/Local Base64 Favicon Upload, Kumo Toast & Dialog components.
+ * Features 2-stage High-Risk System Reset Protocol (Confirm + Password Verification), Title, Favicon Data URL, Kumo Toast & Dialogs.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -144,6 +144,68 @@ function showConfirm(title, message) {
     document.getElementById('kumoConfirmCancel').onclick = handleCancel;
     document.getElementById('kumoConfirmOk').onclick = handleOk;
   });
+}
+
+/* Irreversible High-Risk System Reset Protocol (2-Stage Verification) */
+async function triggerResetFlow() {
+  const confirmed = await showConfirm(
+    '⚠️ 危险高危操作确认',
+    '您即将彻底清空所有监控节点、告警通道及系统配置！清空后无法恢复。确定要继续重置吗？'
+  );
+
+  if (!confirmed) return;
+
+  // 1st Stage passed -> Open 2nd Stage Password Modal
+  document.getElementById('resetPasswordOverlay').classList.add('active');
+  const inputEl = document.getElementById('resetConfirmPasswordInput');
+  if (inputEl) {
+    inputEl.value = '';
+    inputEl.focus();
+  }
+}
+
+function closeResetPasswordModal() {
+  document.getElementById('resetPasswordOverlay').classList.remove('active');
+}
+
+async function executeResetWithPassword() {
+  const passwordInput = document.getElementById('resetConfirmPasswordInput').value;
+  if (!passwordInput) {
+    showToast('请输入当前管理员密码进行安全核验！', 'warning', '验证失败');
+    return;
+  }
+
+  const token = sessionStorage.getItem('edgepulse_token');
+
+  try {
+    const res = await fetch('/api/config', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        action: 'reset',
+        confirmPassword: passwordInput,
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      showToast(data.error || '密码验证失败', 'error', '重置被拒绝');
+      return;
+    }
+
+    closeResetPasswordModal();
+    showToast('系统 KV 存储数据已彻底重置清空！即刻退出登录...', 'success', '重置成功');
+
+    setTimeout(() => {
+      handleLogout();
+    }, 1500);
+
+  } catch (err) {
+    showToast(err.message, 'error', '重置异常');
+  }
 }
 
 let turnstileWidgetId = null;

@@ -1,12 +1,12 @@
 /**
  * EdgeOne Edge Function: /api/config
- * Configuration Management API for Sites, Multi-Domain Status Pages, and Webhook Alert channels.
- * Features in-memory fallback store for local dev server to guarantee persistence across requests.
+ * Configuration Management API for Sites, Multi-Domain Status Pages, Webhook Alert channels.
+ * Supports RESET operation with password verification and KV store purging.
  */
 
-// In-memory store fallback when KV is not bound (e.g. local dev server)
 let inMemoryConfig = {
   title: 'EdgePulse System Status',
+  favicon: '',
   icp: '',
   sites: [],
   alerts: {},
@@ -32,7 +32,7 @@ async function handleConfig(context) {
   const corsHeaders = {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-Key',
   };
 
@@ -57,7 +57,6 @@ async function handleConfig(context) {
       if (!config) {
         config = inMemoryConfig;
       } else {
-        // Sync inMemoryConfig with KV
         inMemoryConfig = config;
       }
 
@@ -70,7 +69,42 @@ async function handleConfig(context) {
     if (request.method === 'POST' || request.method === 'PUT') {
       const body = await request.json();
 
-      // Always update in-memory store for local dev server
+      // Handle Irreversible Reset Purge Action
+      if (body.action === 'reset') {
+        const inputPassword = (body.confirmPassword || '').trim();
+        let authConfig = kv ? await kv.get('config:auth', 'json') : null;
+        const targetPassword = (authConfig?.password || 'admin').trim();
+
+        if (inputPassword !== targetPassword) {
+          return new Response(JSON.stringify({ error: '安全核验失败：管理员密码输入错误' }), {
+            status: 403,
+            headers: corsHeaders,
+          });
+        }
+
+        // Reset memory fallback
+        inMemoryConfig = {
+          title: 'EdgePulse System Status',
+          favicon: '',
+          icp: '',
+          sites: [],
+          alerts: {},
+          groups: ['default'],
+        };
+
+        // Purge KV storage keys
+        if (kv) {
+          await kv.delete('config');
+          await kv.delete('status:snapshot');
+        }
+
+        return new Response(JSON.stringify({ success: true, message: '系统 KV 存储数据已彻底重置清空' }), {
+          status: 200,
+          headers: corsHeaders,
+        });
+      }
+
+      // Normal config save/update
       inMemoryConfig = {
         ...inMemoryConfig,
         ...body,
@@ -78,8 +112,6 @@ async function handleConfig(context) {
 
       if (kv) {
         await kv.put('config', JSON.stringify(inMemoryConfig));
-        
-        // Handle multi-domain mappings if provided
         if (body.domains && Array.isArray(body.domains)) {
           for (const item of body.domains) {
             await kv.put(`domain:${item.host}`, JSON.stringify({ pageId: item.pageId }));
