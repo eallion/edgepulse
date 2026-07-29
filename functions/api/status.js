@@ -4,15 +4,21 @@
  * Supports Multi-Domain matching via request Host header.
  */
 
+export async function onRequest(context) {
+  return handleStatusRequest(context);
+}
+
 export async function onRequestGet(context) {
-  const { request } = context;
-  const url = new URL(request.url);
-  const host = request.headers.get('host') || url.hostname;
+  return handleStatusRequest(context);
+}
 
-  // In-memory fallback if MONITOR_KV is not yet bound in dev
-  const kv = typeof MONITOR_KV !== 'undefined' ? MONITOR_KV : null;
-
+async function handleStatusRequest(context) {
   try {
+    const request = context?.request || {};
+    const url = request.url ? new URL(request.url) : new URL('http://localhost');
+    const host = (request.headers && request.headers.get('host')) || url.hostname;
+
+    // Guard global KV variable
     let globalConfig = null;
     let pageConfig = null;
     let sites = [];
