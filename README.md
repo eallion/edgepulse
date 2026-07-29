@@ -23,16 +23,18 @@
 > 1. 本项目所有前端页面（包含前台 `index.html`、后台 `admin.html` 以及未来新增的所有页面和组件）**必须统一采用基于 Base UI 的 Cloudflare Kumo UI 设计系统**。
 > 2. 视觉需维持哑光高质感背景、极简 1px 细线边框、Cloudflare 橙色/Base UI 蓝色调色板、胶囊造型按钮以及无缝平滑微交互。
 > 3. 后续所有功能迭代与 UI 更改必须严格遵守此 UI 约定，不得引入杂乱样式或破坏 Kumo UI 整体一致性。
-- ⚙️ **前端可视化管理 Modal**：支持在 UI 界面点击【⚙️ 管理监控】弹窗，快速添加 HTTP(S)、ICMP、TCP 端口、域名到期或 Push 心跳监控节点。
-  - 🟢 **HTTP(S) 状态码与延迟**：**默认使用极轻量 `HEAD` 请求**（只请求 Headers、不下载 Response Body、零服务器流量与内存开销）；当目标站点不支持 `HEAD` 返回 `545` (Unknown Status) 或 `405` (Method Not Allowed) 等边缘/防刷错误时，**自动智能降级重试 `GET` 请求**，保证零误报。支持自定义方法。
+- ⚙️ **前端可视化管理 Modal**：支持在 UI 界面点击【⚙️ 管理监控】弹窗，快速添加监控节点。
+  - 📡 **4 大多维监控协议层**：
+  - **HTTP(S) 网站 / 接口**：默认以超轻量 `HEAD` 请求打靶（自动降级 `GET`），毫秒级感知 HTTP 状态码与响应延时。集成根域名到期与 SSL 证书智能检测。
+  - **ICMP PING 探针**：基于 Cloudflare / EdgeOne 边缘网络向目标主机/VPS 发起 ICMP PING，实时记录丢包率与网络延迟。
+  - **TCP 端口连通性检测**：精准探测数据库、SSH、Redis、自定义服务端口（如 `22`, `3306`, `6379`, `8080`）的开放与响应状态。
+  - **Push 被动心跳打卡 (Dead Man)**：专为无公网 IP 的内网设备、NAS、Cron 定时任务设计的“被动打卡”监控模式。若在预定周期内未收到 Pulse 打卡信号，自动触发断网告警。
   - 🔍 **内容/关键字匹配**：校验 Response Body 字符串或 JSON 路径值，防止假死报错。
   - 🔒 **SSL/TLS 证书到期预警**：自动解析 HTTPS 证书到期时间，默认提前 30 天开启预警推送。
   - 🌐 **根域名/子域名智能识别到期监控 (WHOIS/RDAP)**：
     - **根域名 (Apex Domain，如 `eallion.com`)**：自动提供【域名到期监控】与【SSL 证书到期监控】双开关。
     - **子域名 (Subdomain，如 `demo.eallion.com`)**：自动隐藏域名到期，仅保留【SSL 证书到期监控】。
     - **自定义检查频率与告警阈值**：支持选择到期检查频率（`Daily` 每天 / `Weekly` 每周 / `Monthly` 每月）以及自定义提前提醒天数（默认均为 30 天）。
-  - 📡 **原生 ICMP PING**：通过 Cloud Functions 节点支持原始 ICMP 报文探测，监控只响应 PING 的 VPS。
-  - 💓 **Push 被动心跳打卡**：支持异地服务器/备份脚本被动 HTTP 心跳打卡（Dead Man's Snitch）。
 - 🔔 **丰富多渠道告警通知**：
   - 飞书 (Lark) 富文本卡片、企业微信 Markdown 消息、钉钉加签机器人
   - Telegram Bot 即时消息、Discord / Slack 团队频道

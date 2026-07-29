@@ -1,7 +1,7 @@
 /**
  * EdgePulse Admin Dashboard Logic
  * Powered by Cloudflare Kumo UI / Base UI Tokens.
- * Single Integrated High-Risk Reset Password Modal & Toast components.
+ * Features inline Group creation synced to Settings, Single Integrated Reset Password Modal, Title, Favicon Data URL, Kumo Toast & Dialogs.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -22,7 +22,7 @@ function toggleTheme() {
   applyTheme(nextTheme);
 }
 
-const SUN_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><g stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" d="M12 6c3.31 0 6 2.69 6 6c0 3.31 -2.69 6 -6 6c-3.31 0 -6 -2.69 -6 -6c0 -3.31 2.69 -6 6 -6Z"><animate fill="freeze" attributeName="d" dur="0.6s" values="M12 26c3.31 0 6 2.69 6 6c0 3.31 -2.69 6 -6 6c-3.31 0 -6 -2.69 -6 -6c0 -3.31 2.69 -6 6 -6Z;M12 6c3.31 0 6 2.69 6 6c0 3.31 -2.69 6 -6 6c-3.31 0 -6 -2.69 -6 -6c0 -3.31 2.69 -6 6 -6Z"/></path><g fill="none"><path d="M12 21v1M21 12h1M12 3v-1M3 12h-1" opacity="0"><animateTransform attributeName="transform" dur="30s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/><set fill="freeze" attributeName="opacity" begin="0.7s" to="1"/><animate fill="freeze" attributeName="d" begin="0.7s" dur="0.2s" values="M12 19v1M19 12h1M12 5v-1M5 12h-1;M12 21v1M21 12h1M12 3v-1M3 12h-1"/></path><path d="M18.5 18.5l0.5 0.5M18.5 5.5l0.5 -0.5M5.5 5.5l-0.5 -0.5M5.5 18.5l-0.5 0.5" opacity="0"><animateTransform attributeName="transform" dur="30s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/><set fill="freeze" attributeName="opacity" begin="0.9s" to="1"/><animate fill="freeze" attributeName="d" begin="0.9s" dur="0.2s" values="M17 17l0.5 0.5M17 7l0.5 -0.5M7 7l-0.5 -0.5M7 17l-0.5 0.5;M18.5 18.5l0.5 0.5M18.5 5.5l0.5 -0.5M5.5 5.5l-0.5 -0.5M5.5 18.5l-0.5 0.5"/></path></g></g></svg>`;
+const SUN_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><g stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" d="M12 6c3.31 0 6 2.69 6 6c0 3.31 -2.69 6 -6 6c-3.31 0 -6 -2.69 -6 -6c0 -3.31 2.69 -6 6 -6Z"><animate fill="freeze" attributeName="d" dur="0.6s" values="M12 26c3.31 0 6 2.69 6 6c0 3.31 -2.69 6 -6 6c-3.31 0 -6 -2.69 -6 -6c0 -3.31 2.69 -6 6 -6Z;M12 6c3.31 0 6 2.69 6 6c0 3.31 -2.69 6 -6 6c-3.31 0 -6 -2.69 -6 -6c0 -3.31 2.69 -6 6 -6Z"/></path><g fill="none"><path d="M12 21v1M21 12h1M12 3v-1M3 12h-1" opacity="0"><animateTransform attributeName="transform" dur="30s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/><set fill="freeze" attributeName="opacity" begin="0.7s" to="1"/><animate fill="freeze" attributeName="d" begin="0.7s" dur="0.2s" values="M12 19v1M19 12h1M12 5v-1M5 12h-1;M12 21v1M21 12h1M12 3v-1M3 12h-1"/></path><path d="M18.5 18.5l0.5 0.5M18.5 5.5l0.5 -0.5M5.5 5.5l-0.5 -0.5M5.5 18.5l-0.5 0.5" opacity="0"><animateTransform attributeName="transform" dur="30s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/><set fill="freeze" attributeName="opacity" begin="0.7s" to="1"/><animate fill="freeze" attributeName="d" begin="0.7s" dur="0.2s" values="M17 17l0.5 0.5M17 7l0.5 -0.5M7 7l-0.5 -0.5M7 17l-0.5 0.5;M18.5 18.5l0.5 0.5M18.5 5.5l0.5 -0.5M5.5 5.5l-0.5 -0.5M5.5 18.5l-0.5 0.5"/></path></g></g></svg>`;
 const MOON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><g fill="currentColor"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 6c0 6.08 4.92 11 11 11c0.53 0 1.05 -0.04 1.56 -0.11c-1.61 2.47 -4.39 4.11 -7.56 4.11c-4.97 0 -9 -4.03 -9 -9c0 -3.17 1.64 -5.95 4.11 -7.56c-0.07 0.51 -0.11 1.03 -0.11 1.56Z"><animate fill="freeze" attributeName="d" dur="0.6s" values="M7 28c0 6.08 4.92 11 11 11c0.53 0 1.05 -0.04 1.56 -0.11c-1.61 2.47 -4.39 4.11 -7.56 4.11c-4.97 0 -9 -4.03 -9 -9c0 -3.17 1.64 -5.95 4.11 -7.56c-0.07 0.51 -0.11 1.03 -0.11 1.56Z;M7 6c0 6.08 4.92 11 11 11c0.53 0 1.05 -0.04 1.56 -0.11c-1.61 2.47 -4.39 4.11 -7.56 4.11c-4.97 0 -9 -4.03 -9 -9c0 -3.17 1.64 -5.95 4.11 -7.56c-0.07 0.51 -0.11 1.03 -0.11 1.56Z"/></path><path d="M15.22 6.03l2.53 -1.94l-3.19 -0.09l-1.06 -3l-1.06 3l-3.19 0.09l2.53 1.94l-0.91 3.06l2.63 -1.81l2.63 1.81l-0.91 -3.06Z" opacity="0"><animate fill="freeze" attributeName="opacity" begin="0.7s" dur="0.4s" to="1"/></path><path d="M19.61 12.25l1.64 -1.25l-2.06 -0.05l-0.69 -1.95l-0.69 1.95l-2.06 0.05l1.64 1.25l-0.59 1.98l1.7 -1.17l1.7 1.17l-0.59 -1.98Z" opacity="0"><animate fill="freeze" attributeName="opacity" begin="1.1s" dur="0.4s" to="1"/></path></g></svg>`;
 
 function applyTheme(theme) {
@@ -367,8 +367,7 @@ function toggleAdminFormFields() {
   const type = document.getElementById('newSiteType').value;
   document.getElementById('adminUrlGroup').style.display = (type === 'http') ? 'block' : 'none';
   document.getElementById('adminHostGroup').style.display = (type === 'icmp' || type === 'tcp') ? 'block' : 'none';
-  document.getElementById('adminDomainGroup').style.display = (type === 'domain') ? 'block' : 'none';
-  document.getElementById('expiryMonitorPanel').style.display = (type === 'http' || type === 'domain') ? 'block' : 'none';
+  document.getElementById('expiryMonitorPanel').style.display = (type === 'http') ? 'block' : 'none';
   onUrlOrHostInput();
 }
 
@@ -383,8 +382,7 @@ function isRootDomain(hostname) {
 }
 
 function onUrlOrHostInput() {
-  const siteUrlEl = document.getElementById('siteUrl');
-  const siteDomainEl = document.getElementById('siteDomain');
+  const siteUrlEl = document.getElementById('newSiteUrl');
   const badgeEl = document.getElementById('domainLevelBadge');
   const chkDomainItem = document.getElementById('chkDomainItem');
   const domainWarnDaysGroup = document.getElementById('domainWarnDaysGroup');
@@ -392,14 +390,12 @@ function onUrlOrHostInput() {
   if (!siteUrlEl || !badgeEl) return;
 
   const urlVal = siteUrlEl.value || '';
-  const domainVal = siteDomainEl ? siteDomainEl.value || '' : '';
-  const targetStr = urlVal || domainVal || '';
 
   let hostname = '';
   try {
-    hostname = targetStr.includes('://') ? new URL(targetStr).hostname : targetStr.split('/')[0].split(':')[0];
+    hostname = urlVal.includes('://') ? new URL(urlVal).hostname : urlVal.split('/')[0].split(':')[0];
   } catch (e) {
-    hostname = targetStr;
+    hostname = urlVal;
   }
 
   const isApex = isRootDomain(hostname);
@@ -419,6 +415,20 @@ function onUrlOrHostInput() {
   } else {
     badgeEl.textContent = '识别中...';
     badgeEl.style.color = 'var(--text-muted)';
+  }
+}
+
+function onGroupSelectChange() {
+  const selectEl = document.getElementById('newSiteGroupSelect');
+  const inputEl = document.getElementById('newSiteCustomGroupInput');
+  if (selectEl && inputEl) {
+    if (selectEl.value === '__new__') {
+      inputEl.style.display = 'block';
+      inputEl.focus();
+    } else {
+      inputEl.style.display = 'none';
+      inputEl.value = '';
+    }
   }
 }
 
@@ -645,9 +655,15 @@ function updateAvailableChannelsAndGroups(config) {
     groups.forEach(g => {
       const opt = document.createElement('option');
       opt.value = g.trim();
-      opt.textContent = g.trim();
+      opt.textContent = `📁 ${g.trim()}`;
       groupSelect.appendChild(opt);
     });
+
+    // Add Option to create new group inline
+    const newGroupOpt = document.createElement('option');
+    newGroupOpt.value = '__new__';
+    newGroupOpt.textContent = '➕ 创建新分组...';
+    groupSelect.appendChild(newGroupOpt);
   }
 }
 
@@ -658,8 +674,28 @@ async function handleCreateSite(event) {
   const name = document.getElementById('newSiteName').value;
   const url = document.getElementById('newSiteUrl').value;
   const host = document.getElementById('newSiteHost').value;
-  const domain = document.getElementById('newSiteDomain').value;
-  const group = document.getElementById('newSiteGroupSelect').value;
+  
+  const selectEl = document.getElementById('newSiteGroupSelect');
+  const customGroupInputEl = document.getElementById('newSiteCustomGroupInput');
+
+  let finalGroup = 'default';
+  if (selectEl.value === '__new__') {
+    const customVal = customGroupInputEl ? customGroupInputEl.value.trim() : '';
+    if (!customVal) {
+      showToast('请输入新建分组名称', 'warning');
+      return;
+    }
+    finalGroup = customVal;
+  } else {
+    finalGroup = selectEl.value;
+  }
+
+  // Synchronize new group into global settings groups list
+  let updatedGroups = activeGroupsList.includes(finalGroup) 
+    ? activeGroupsList 
+    : [...activeGroupsList, finalGroup];
+
+  activeGroupsList = updatedGroups;
 
   const checkDomain = document.getElementById('chkEnableDomainExpiry').checked;
   const checkSsl = document.getElementById('chkEnableSslExpiry').checked;
@@ -673,7 +709,7 @@ async function handleCreateSite(event) {
     id: `site-${Date.now()}`,
     name,
     type,
-    group,
+    group: finalGroup,
     checkDomain,
     checkSsl,
     expiryFrequency,
@@ -682,15 +718,20 @@ async function handleCreateSite(event) {
     alertChannels: selectedChannels,
     ...(url && { url }),
     ...(host && { host }),
-    ...(domain && { domain }),
   };
 
   const updatedConfig = {
     ...cachedConfig,
+    groups: updatedGroups,
     sites: [...(cachedConfig.sites || []), newSite],
   };
 
-  await saveConfig(updatedConfig, token, '监控节点添加成功！');
+  await saveConfig(updatedConfig, token, `监控节点添加成功，并成功关联分组 [${finalGroup}]！`);
+  
+  // Reset custom group input
+  if (customGroupInputEl) customGroupInputEl.value = '';
+  if (selectEl) selectEl.value = finalGroup;
+  
   switchTab('sites');
 }
 

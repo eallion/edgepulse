@@ -195,7 +195,6 @@
                 <option value="http">HTTP(S) 网站 / API (默认轻量 HEAD 请求)</option>
                 <option value="icmp">ICMP PING 探针 (屏蔽端口 VPS)</option>
                 <option value="tcp">TCP 端口检测 (如 22, 3306, 6379)</option>
-                <option value="domain">域名到期监控 (WHOIS/RDAP)</option>
                 <option value="push">Push 被动心跳打卡 (Dead Man)</option>
               </select>
             </div>
@@ -210,10 +209,6 @@
             <div class="form-group" id="adminHostGroup" style="display: none;">
               <label>目标 IP / Host</label>
               <input type="text" id="newSiteHost" placeholder="例如: 1.2.3.4 或 db.example.com">
-            </div>
-            <div class="form-group" id="adminDomainGroup" style="display: none;">
-              <label>域名 (Domain)</label>
-              <input type="text" id="newSiteDomain" placeholder="例如: eallion.com" oninput="onUrlOrHostInput()">
             </div>
 
             <!-- Intelligent Expiry Monitor Panel -->
@@ -254,9 +249,12 @@
 
             <div class="form-group" style="margin-top: 1rem;">
               <label>所属分组 (Group)</label>
-              <select id="newSiteGroupSelect">
-                <!-- Dynamically filled -->
-              </select>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <select id="newSiteGroupSelect" style="flex: 1;" onchange="onGroupSelectChange()">
+                  <!-- Dynamically filled + option to create new group -->
+                </select>
+                <input type="text" id="newSiteCustomGroupInput" placeholder="输入全新分组名称" style="display: none; flex: 1;">
+              </div>
             </div>
             <div class="form-group">
               <label>选择绑定的告警通知服务 (可选，仅展示已显式开启的通知服务)</label>
