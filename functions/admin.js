@@ -1,22 +1,46 @@
 /**
  * EdgeOne Edge Function: /admin
- * Intercepts /admin and /admin/ clean URLs and seamlessly redirects to /admin.html
+ * Performs Internal Rewrite to serve /admin.html content directly without 302 redirect or Host mismatch.
  */
 
 export async function onRequest(context) {
-  return handleAdminRoute(context);
+  return handleAdminRewrite(context);
 }
 
 export async function onRequestGet(context) {
-  return handleAdminRoute(context);
+  return handleAdminRewrite(context);
 }
 
-function handleAdminRoute(context) {
+async function handleAdminRewrite(context) {
   const request = context.request || {};
   const url = new URL(request.url || 'http://localhost/admin');
   
-  // Clean redirect from /admin or /admin/ to /admin.html
-  const targetUrl = `${url.protocol}//${url.host}/admin.html`;
+  // Construct internal request for /admin.html on the exact same origin
+  const adminHtmlUrl = new URL('/admin.html', url.origin);
 
-  return Response.redirect(targetUrl, 302);
+  try {
+    const response = await fetch(adminHtmlUrl.toString(), {
+      headers: request.headers,
+    });
+
+    if (response.ok) {
+      const htmlText = await response.text();
+      return new Response(htmlText, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Access-Control-Allow-Origin': '*',
+        },
+      });
+    }
+  } catch (e) {}
+
+  // Fallback: 302 redirect using relative location header to prevent UserCnameInvalid
+  return new Response(null, {
+    status: 302,
+    headers: {
+      'Location': '/admin.html',
+    },
+  });
 }
