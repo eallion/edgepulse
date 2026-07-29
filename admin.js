@@ -410,18 +410,29 @@ function renderPagesTable(pages) {
   tbody.innerHTML = '';
 
   if (!pages || pages.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">暂无独立监控页，默认均使用全局统一看板</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">暂无 Status 监控页，默认均展示全量监控项</td></tr>';
     return;
   }
 
+  const allSites = cachedConfig.sites || [];
+
   pages.forEach((page, idx) => {
     const tr = document.createElement('tr');
-    const sitesCount = (page.siteIds && page.siteIds.length > 0) ? `${page.siteIds.length} 个节点` : '全部节点';
+
+    let sitesSummary = '<span style="color: var(--text-muted);">包含全部监控项</span>';
+    if (page.siteIds && page.siteIds.length > 0) {
+      const matchedNames = page.siteIds.map(id => {
+        const site = allSites.find(s => s.id === id);
+        return site ? site.name : id;
+      });
+      sitesSummary = `<span style="color: var(--color-accent); font-weight: 500;">${matchedNames.join(', ')}</span> <small style="color: var(--text-muted);">(${page.siteIds.length} 项)</small>`;
+    }
+
     tr.innerHTML = `
       <td style="white-space: nowrap;"><strong>${page.domain || '-'}</strong></td>
       <td style="white-space: nowrap;">${page.name || '-'}</td>
+      <td style="white-space: nowrap;"><div class="ellipsis-text" style="max-width: 260px;" title="${page.siteIds ? page.siteIds.join(',') : ''}">${sitesSummary}</div></td>
       <td style="white-space: nowrap;">${page.title || '<span style="color: var(--text-muted);">(继承全局)</span>'}</td>
-      <td style="white-space: nowrap;">${sitesCount}</td>
       <td style="white-space: nowrap;">
         <button class="btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; margin-right: 0.3rem;" onclick="editCustomPage(${idx})">编辑</button>
         <button class="btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; color: var(--color-red);" onclick="deleteCustomPage(${idx})">删除</button>
@@ -439,7 +450,7 @@ async function handleSaveCustomPage() {
   const editingId = document.getElementById('pageEditingId').value;
 
   if (!domain) {
-    showToast('请输入绑定的自定义域名', 'error', '表单验证失败');
+    showToast('请输入 Status 域名', 'error', '表单验证失败');
     return;
   }
 
@@ -472,7 +483,7 @@ async function handleSaveCustomPage() {
   }
 
   const token = localStorage.getItem('edgepulse_admin_token') || 'dev_authenticated_token';
-  await saveConfig(cachedConfig, token, '独立监控页保存成功！');
+  await saveConfig(cachedConfig, token, 'Status 监控页保存成功！');
   resetPageForm();
   renderPagesTab();
 }
@@ -482,7 +493,7 @@ function editCustomPage(index) {
   const page = pages[index];
   if (!page) return;
 
-  document.getElementById('pageEditorTitle').textContent = '✏️ 编辑监控页';
+  document.getElementById('pageEditorTitle').textContent = '✏️ 编辑 Status 监控页';
   document.getElementById('pageEditingId').value = page.id;
   document.getElementById('pageDomainInput').value = page.domain || '';
   document.getElementById('pageNameInput').value = page.name || '';
@@ -495,14 +506,14 @@ function editCustomPage(index) {
 
 function deleteCustomPage(index) {
   showKumoConfirm({
-    title: '🗑️ 确认删除监控页',
-    message: '删除后该自定义域名将自动降级使用全局状态看板，是否确定删除？',
+    title: '🗑️ 确认删除 Status 监控页',
+    message: '删除后该域名访问时将自动使用全量监控项，是否确定删除？',
     confirmText: '确认删除',
     onConfirm: async () => {
       if (cachedConfig.pages && cachedConfig.pages[index]) {
         cachedConfig.pages.splice(index, 1);
         const token = localStorage.getItem('edgepulse_admin_token') || 'dev_authenticated_token';
-        await saveConfig(cachedConfig, token, '监控页已成功删除！');
+        await saveConfig(cachedConfig, token, 'Status 监控页已成功删除！');
         resetPageForm();
         renderPagesTab();
       }
@@ -511,7 +522,7 @@ function deleteCustomPage(index) {
 }
 
 function resetPageForm() {
-  document.getElementById('pageEditorTitle').textContent = '➕ 创建独立监控页';
+  document.getElementById('pageEditorTitle').textContent = '➕ 添加 Status 监控页';
   document.getElementById('pageEditingId').value = '';
   document.getElementById('pageDomainInput').value = '';
   document.getElementById('pageNameInput').value = '';

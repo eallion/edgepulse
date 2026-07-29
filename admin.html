@@ -281,16 +281,16 @@
         <!-- Tab 3: Custom Status Pages -->
         <div id="tab-pages" style="display: none;">
           <div style="background: var(--bg-card); border: 1px solid var(--border-card); border-radius: 10px; padding: 1.25rem; margin-bottom: 1.5rem;">
-            <h3 style="margin-top: 0; margin-bottom: 0.4rem;" id="pageEditorTitle">➕ 创建独立监控页</h3>
-            <span class="sub-hint" style="display: block; margin-bottom: 1rem;">针对绑定至同一个 EdgeOne Makers 的不同自定义域名，配置专属的标题、提示公告与绑定的监控节点。</span>
+            <h3 style="margin-top: 0; margin-bottom: 0.4rem;" id="pageEditorTitle">➕ 添加 Status 监控页</h3>
+            <span class="sub-hint" style="display: block; margin-bottom: 1rem;">按 Status 域名添加独立监控页，并勾选该域名下需要包含展示的监控项。</span>
             <input type="hidden" id="pageEditingId" value="">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
               <div class="form-group">
-                <label>绑定域名</label>
+                <label>Status 域名</label>
                 <input type="text" id="pageDomainInput" placeholder="例如: status.a.com">
               </div>
               <div class="form-group">
-                <label>监控页名称</label>
+                <label>页面名称</label>
                 <input type="text" id="pageNameInput" placeholder="例如: 官方主站监控页">
               </div>
             </div>
@@ -305,25 +305,25 @@
               </div>
             </div>
             <div class="form-group">
-              <label>绑定展示节点</label>
+              <label>勾选包含的监控项</label>
               <div id="pageSitesCheckboxContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.6rem; margin-top: 0.4rem; padding: 0.75rem; background: var(--bg-card-secondary); border-radius: 8px; border: 1px solid var(--border-card);">
                 <!-- Dynamically filled -->
               </div>
             </div>
             <div style="display: flex; gap: 0.75rem;">
-              <button type="button" class="btn-primary" onclick="handleSaveCustomPage()">💾 保存监控页配置</button>
+              <button type="button" class="btn-primary" onclick="handleSaveCustomPage()">💾 保存监控页</button>
               <button type="button" class="btn-secondary" id="cancelEditPageBtn" onclick="resetPageForm()" style="display: none;">取消编辑</button>
             </div>
           </div>
 
-          <h3>已建独立监控页</h3>
+          <h3>已建 Status 监控页列表</h3>
           <table class="site-table">
             <thead>
               <tr>
-                <th>绑定域名</th>
+                <th>Status 域名</th>
                 <th>页面名称</th>
+                <th>包含监控项</th>
                 <th>专属标题</th>
-                <th>关联节点数</th>
                 <th>操作</th>
               </tr>
             </thead>
