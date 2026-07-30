@@ -152,7 +152,7 @@ function renderPage(data) {
   if (sites.length === 0) {
     container.innerHTML = `
       <div class="service-card" style="text-align: center; padding: 3rem 1.5rem; color: var(--text-muted);">
-        <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚡</div>
+        <div style="font-size: 2rem; margin-bottom: 0.5rem; display: flex; justify-content: center;"><svg width="32" height="32" viewBox="0 0 24 24" fill="var(--color-accent)"><path d="M13 2L3 14h7v8l10-12h-7z"/></svg></div>
         <div style="font-size: 1rem; color: var(--text-secondary); font-weight: 500;">尚未建立任何监控节点</div>
         <div style="font-size: 0.85rem; margin-top: 0.25rem;">登录控制台后台添加您的第一个网站或探针</div>
       </div>
@@ -171,7 +171,7 @@ function renderPage(data) {
   Object.keys(groups).forEach(groupName => {
     const groupHeader = document.createElement('div');
     groupHeader.className = 'group-title';
-    groupHeader.innerHTML = `<span>📂</span> <span>${groupName}</span>`;
+    groupHeader.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -0.15em; margin-right: 0.3rem;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> <span>${groupName}</span>`;
     container.appendChild(groupHeader);
 
     groups[groupName].forEach(site => {
@@ -224,20 +224,24 @@ function createServiceCard(site, historyDays = 30) {
   let sslTagHtml = '';
   if (site.sslExpiryDays !== null && site.sslExpiryDays !== undefined) {
     const sslColor = site.sslExpiryDays < 14 ? 'color: var(--color-red);' : 'color: var(--text-secondary);';
-    sslTagHtml = `<span class="tag-badge" style="${sslColor}">🔒 SSL 剩 ${site.sslExpiryDays} 天</span>`;
+    sslTagHtml = `<span class="tag-badge" style="${sslColor}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -0.15em; margin-right: 0.2rem;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>SSL 剩 ${site.sslExpiryDays} 天</span>`;
   }
 
   let domainTagHtml = '';
   if (site.domainExpiryDays !== null && site.domainExpiryDays !== undefined) {
     const domainColor = site.domainExpiryDays < 30 ? 'color: var(--color-yellow);' : 'color: var(--text-secondary);';
-    domainTagHtml = `<span class="tag-badge" style="${domainColor}">🌐 域名剩 ${site.domainExpiryDays} 天</span>`;
+    domainTagHtml = `<span class="tag-badge" style="${domainColor}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -0.15em; margin-right: 0.2rem;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>域名剩 ${site.domainExpiryDays} 天</span>`;
   }
 
   // Type Icon
-  let typeIcon = '🌐';
-  if (site.type === 'icmp') typeIcon = '📡';
-  else if (site.type === 'tcp') typeIcon = '🔌';
-  else if (site.type === 'push') typeIcon = '⏱️';
+  let typeIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -0.15em; margin-right: 0.3rem;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`;
+  if (site.type === 'icmp') {
+    typeIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -0.15em; margin-right: 0.3rem;"><path d="M4.93 4.93A10 10 0 0 1 19.07 4.93"/><path d="M7.76 7.76a6 6 0 0 1 8.48 0"/><circle cx="12" cy="12" r="2"/></svg>`;
+  } else if (site.type === 'tcp') {
+    typeIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -0.15em; margin-right: 0.3rem;"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>`;
+  } else if (site.type === 'push') {
+    typeIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -0.15em; margin-right: 0.3rem;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
+  }
 
   // Dynamic Uptime Bar Pills (30/60/90/180)
   let barsHtml = '';

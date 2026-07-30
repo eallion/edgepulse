@@ -493,7 +493,7 @@ function editCustomPage(index) {
   const page = pages[index];
   if (!page) return;
 
-  document.getElementById('pageEditorTitle').textContent = '✏️ 编辑 Status 监控页';
+  document.getElementById('pageEditorTitle').innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -0.15em; margin-right: 0.3rem;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>编辑 Status 监控页';
   document.getElementById('pageEditingId').value = page.id;
   document.getElementById('pageDomainInput').value = page.domain || '';
   document.getElementById('pageNameInput').value = page.name || '';
@@ -506,7 +506,7 @@ function editCustomPage(index) {
 
 function deleteCustomPage(index) {
   showKumoConfirm({
-    title: '🗑️ 确认删除 Status 监控页',
+    title: '确认删除 Status 监控页',
     message: '删除后该域名访问时将自动使用全量监控项，是否确定删除？',
     confirmText: '确认删除',
     onConfirm: async () => {
@@ -522,7 +522,7 @@ function deleteCustomPage(index) {
 }
 
 function resetPageForm() {
-  document.getElementById('pageEditorTitle').textContent = '➕ 添加 Status 监控页';
+  document.getElementById('pageEditorTitle').innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -0.15em; margin-right: 0.3rem;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>添加 Status 监控页';
   document.getElementById('pageEditingId').value = '';
   document.getElementById('pageDomainInput').value = '';
   document.getElementById('pageNameInput').value = '';
@@ -805,7 +805,7 @@ function renderGroupTags() {
     tag.style.alignItems = 'center';
     tag.style.gap = '0.4rem';
     tag.innerHTML = `
-      <span>📁 ${group}</span>
+      <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -0.15em; margin-right: 0.2rem;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>${group}</span>
       <span onclick="removeGroupTag(${index})" title="删除分组" style="cursor: pointer; color: var(--color-red); font-weight: bold; margin-left: 0.3rem; padding: 0 0.2rem;">✕</span>
     `;
     container.appendChild(tag);
@@ -835,33 +835,34 @@ function removeGroupTag(index) {
 function updateAvailableChannelsAndGroups(config) {
   const alerts = config.alerts || {};
   const channelContainer = document.getElementById('availableAlertChannels');
+  if (!channelContainer) return;
   channelContainer.innerHTML = '';
 
   const configuredChannels = [];
   if ((alerts.larkEnabled ?? !!alerts.larkWebhook) && alerts.larkWebhook) {
-    configuredChannels.push({ id: 'lark', label: '🟦 飞书' });
+    configuredChannels.push({ id: 'lark', label: '飞书' });
   }
   if ((alerts.wechatEnabled ?? !!alerts.wechatWebhook) && alerts.wechatWebhook) {
-    configuredChannels.push({ id: 'wechat', label: '🟩 企业微信' });
+    configuredChannels.push({ id: 'wechat', label: '企业微信' });
   }
   if ((alerts.dingtalkEnabled ?? !!alerts.dingtalkWebhook) && alerts.dingtalkWebhook) {
-    configuredChannels.push({ id: 'dingtalk', label: '🍊 钉钉' });
+    configuredChannels.push({ id: 'dingtalk', label: '钉钉' });
   }
   if ((alerts.telegramEnabled ?? (!!alerts.telegramToken && !!alerts.telegramChatId)) && alerts.telegramToken) {
-    configuredChannels.push({ id: 'telegram', label: '✈️ Telegram' });
+    configuredChannels.push({ id: 'telegram', label: 'Telegram' });
   }
   if ((alerts.barkEnabled ?? !!alerts.barkUrl) && alerts.barkUrl) {
-    configuredChannels.push({ id: 'bark', label: '📱 Bark (iOS)' });
+    configuredChannels.push({ id: 'bark', label: 'Bark' });
   }
   if ((alerts.pushplusEnabled ?? !!alerts.pushplusToken) && alerts.pushplusToken) {
-    configuredChannels.push({ id: 'pushplus', label: '🟢 PushPlus (推送加)' });
+    configuredChannels.push({ id: 'pushplus', label: 'PushPlus' });
   }
   if ((alerts.emailEnabled ?? (!!alerts.email && !!alerts.email.receiver)) && alerts.email && alerts.email.receiver) {
-    configuredChannels.push({ id: 'email', label: '✉️ Email 邮件' });
+    configuredChannels.push({ id: 'email', label: 'Email 邮件' });
   }
 
   if (configuredChannels.length === 0) {
-    channelContainer.innerHTML = '<span style="font-size: 0.85rem; color: var(--text-muted);">暂未开启任何通知通道，请在【⚙️ 设置】中勾选并填入告警配置</span>';
+    channelContainer.innerHTML = '<span style="font-size: 0.85rem; color: var(--text-muted);">暂未开启任何通知通道，请在【设置】中勾选并填入告警配置</span>';
   } else {
     configuredChannels.forEach(ch => {
       const item = document.createElement('label');
@@ -878,13 +879,13 @@ function updateAvailableChannelsAndGroups(config) {
     groups.forEach(g => {
       const opt = document.createElement('option');
       opt.value = g.trim();
-      opt.textContent = `📁 ${g.trim()}`;
+      opt.textContent = g.trim();
       groupSelect.appendChild(opt);
     });
 
     const newGroupOpt = document.createElement('option');
     newGroupOpt.value = '__new__';
-    newGroupOpt.textContent = '➕ 创建新分组...';
+    newGroupOpt.textContent = '创建新分组...';
     groupSelect.appendChild(newGroupOpt);
   }
 }
