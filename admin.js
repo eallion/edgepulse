@@ -731,9 +731,11 @@ function fillSettingsForm(config) {
         safeSetValue('settingTotpSecret', generateBase32Secret());
         showToast('已为您自动生成 2FA 动态秘钥，请在身份验证器中绑定', 'info', '2FA 设置');
       }
+      updateTotpQrCode();
     };
   }
   if (config.totpSecret) safeSetValue('settingTotpSecret', config.totpSecret);
+  updateTotpQrCode();
 
   safeSetChecked('chkTurnstileEnabled', config.turnstileEnabled);
   if (config.turnstileSiteKey) safeSetValue('settingTurnstileSiteKey', config.turnstileSiteKey);
@@ -1180,4 +1182,58 @@ function generateBase32Secret() {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return result;
+}
+
+function updateTotpQrCode() {
+  const input = document.getElementById('settingTotpSecret');
+  const secret = input ? input.value.trim().toUpperCase() : '';
+  const totpQrBox = document.getElementById('totpQrBox');
+  const totpQrImg = document.getElementById('totpQrImg');
+  const totpSecretDisplay = document.getElementById('totpSecretDisplay');
+  const totpOtpUrl = document.getElementById('totpOtpUrl');
+
+  if (!secret) {
+    if (totpQrBox) totpQrBox.style.display = 'none';
+    return;
+  }
+
+  const cleanSecret = secret.replace(/[^A-Z2-7]/g, '');
+  const otpUrl = `otpauth://totp/EdgePulse:admin?secret=${cleanSecret}&issuer=EdgePulse`;
+
+  if (totpSecretDisplay) totpSecretDisplay.textContent = cleanSecret.match(/.{1,4}/g)?.join(' ') || cleanSecret;
+  if (totpOtpUrl) totpOtpUrl.textContent = otpUrl;
+
+  if (totpQrImg) {
+    const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(otpUrl)}`;
+    totpQrImg.src = qrApiUrl;
+    totpQrImg.onerror = function() {
+      totpQrImg.src = `https://chart.googleapis.com/chart?cht=qr&chs=180x180&chl=${encodeURIComponent(otpUrl)}`;
+    };
+  }
+
+  if (totpQrBox) totpQrBox.style.display = 'flex';
+}
+
+function generateNewTotpSecret() {
+  const newSecret = generateBase32Secret();
+  safeSetValue('settingTotpSecret', newSecret);
+  updateTotpQrCode();
+  showToast('已生成新的 2FA 动态秘钥与绑定二维码', 'success', '2FA 设置');
+}
+
+function copyTotpSecret() {
+  const secret = document.getElementById('settingTotpSecret')?.value.trim();
+  if (!secret) {
+    showToast('当前无有效 2FA 密钥可供复制', 'warning', '2FA 设置');
+    return;
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(secret).then(() => {
+      showToast('2FA 密钥已成功复制到剪贴板', 'success', '2FA 设置');
+    }).catch(() => {
+      showToast('复制失败，请手动选择复制', 'error', '2FA 设置');
+    });
+  } else {
+    showToast('2FA 密钥：' + secret, 'info', '2FA 密钥');
+  }
 }

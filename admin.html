@@ -546,7 +546,28 @@
               </div>
               <div class="form-group" style="margin-top: 0.75rem;">
                 <label>TOTP 动态密钥</label>
-                <input type="text" id="settingTotpSecret" placeholder="16 位 Base32 密钥">
+                <div style="display: flex; gap: 0.5rem; margin-top: 0.3rem;">
+                  <input type="text" id="settingTotpSecret" placeholder="16 位 Base32 密钥" style="flex: 1; font-family: monospace; font-weight: 600; letter-spacing: 0.05em;" oninput="updateTotpQrCode()">
+                  <button type="button" class="btn-secondary" onclick="generateNewTotpSecret()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -0.15em; margin-right: 0.2rem;"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/></svg>生成新密钥</button>
+                  <button type="button" class="btn-secondary" onclick="copyTotpSecret()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -0.15em; margin-right: 0.2rem;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>复制</button>
+                </div>
+              </div>
+
+              <!-- 2FA QR Code & Instructions Display Box -->
+              <div id="totpQrBox" style="margin-top: 1rem; background: var(--bg-card-hover, rgba(255, 255, 255, 0.03)); border: 1px dashed var(--border-color); border-radius: 8px; padding: 1rem; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.75rem;">
+                <span style="font-size: 0.85rem; color: var(--text-secondary);">请使用 Bitwarden、Google Authenticator 或 1Password 扫描下方二维码：</span>
+                
+                <div style="background: #ffffff; padding: 0.6rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: inline-flex; justify-content: center; align-items: center;" id="totpQrContainer">
+                  <img id="totpQrImg" width="160" height="160" alt="2FA QR Code" style="display: block;">
+                </div>
+
+                <div style="font-family: monospace; font-size: 1.1rem; font-weight: 700; color: var(--color-accent); letter-spacing: 0.1em; background: rgba(0,0,0,0.2); padding: 0.3rem 0.8rem; border-radius: 4px;" id="totpSecretDisplay">
+                  --
+                </div>
+
+                <span class="sub-hint" style="font-size: 0.75rem; word-break: break-all; max-width: 100%; color: var(--text-muted);" id="totpOtpUrl">
+                  otpauth://totp/EdgePulse:admin?secret=...
+                </span>
               </div>
             </div>
 
