@@ -9,11 +9,7 @@ if (!globalThis.__EDGEPULSE_CONFIG__) {
     title: 'EdgePulse Status',
     favicon: '',
     icp: '',
-    sites: [
-      { id: 'site-1', name: '官网主站 (Main Web)', type: 'http', url: 'https://demo.eallion.com', group: 'default', checkDomain: true, checkSsl: true },
-      { id: 'site-2', name: 'API 网关服务', type: 'http', url: 'https://demo.eallion.com/api/status', group: 'default', checkDomain: false, checkSsl: true },
-      { id: 'site-3', name: '香港 VPS 探针', type: 'icmp', host: '1.1.1.1', group: 'default', checkDomain: false, checkSsl: false }
-    ],
+    sites: [],
     alerts: {},
     groups: ['default'],
   };

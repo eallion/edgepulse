@@ -17,10 +17,7 @@ export async function onRequest(context) {
     // Default configuration & sites if not yet in KV
     if (!config || !config.sites) {
       config = {
-        sites: [
-          { id: 'site-1', name: 'Main Portal', url: 'https://example.com', type: 'http', timeout: 5000 },
-          { id: 'site-2', name: 'API Gateway', url: 'https://api.example.com/health', type: 'http', timeout: 5000, keyword: 'ok' },
-        ],
+        sites: [],
         alerts: {},
       };
     }
