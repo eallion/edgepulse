@@ -3,6 +3,7 @@
  * Core Monitoring Engine — executes HTTP/HTTPS/SSL/Domain Expiry checks,
  * updates KV Storage, and dispatches multi-channel alerts (Lark, WeChat, DingTalk, Telegram, Bark, SMTP, Webhook).
  */
+import net from 'net';
 
 export async function onRequest(context) {
   const { request } = context;
