@@ -1446,11 +1446,17 @@ async function saveConfig(configPayload, token, successMsg) {
     fillSettingsForm(cachedConfig);
     renderSitesTable(cachedConfig.sites || []);
     updateAvailableChannelsAndGroups(cachedConfig);
+
+    // Trigger instant background probe cycle for new/updated sites
+    fetch('/api/cron').catch(() => {});
   } catch (err) {
     showToast(successMsg, 'success', '系统提示');
     fillSettingsForm(cachedConfig);
     renderSitesTable(cachedConfig.sites || []);
     updateAvailableChannelsAndGroups(cachedConfig);
+
+    // Trigger instant background probe cycle for new/updated sites
+    fetch('/api/cron').catch(() => {});
   }
 }
 

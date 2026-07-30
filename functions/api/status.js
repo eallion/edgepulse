@@ -81,9 +81,42 @@ async function handleStatusRequest(context) {
       }
     }
 
+    // Helper function to build 30-day real history array
+    function build30DaysHistory(snap, currentStatus) {
+      const history = [];
+      const now = Date.now();
+      const dailyMap = snap?.dailyStatusMap || {};
+
+      for (let i = 0; i < 30; i++) {
+        const d = new Date(now - (29 - i) * 86400000);
+        const dateStr = d.toISOString().split('T')[0];
+        const dayRecord = dailyMap[dateStr];
+
+        let dayStatus = 'operational';
+        let uptimePct = 100;
+
+        if (dayRecord && dayRecord.total > 0) {
+          uptimePct = Math.round((dayRecord.up / dayRecord.total) * 100);
+          if (dayRecord.up === 0) dayStatus = 'down';
+          else if (dayRecord.up < dayRecord.total) dayStatus = 'degraded';
+          else dayStatus = 'operational';
+        } else if (i === 29) {
+          dayStatus = currentStatus === 'down' ? 'down' : (currentStatus === 'degraded' ? 'degraded' : 'operational');
+          uptimePct = currentStatus === 'down' ? 0 : 100;
+        }
+
+        history.push({
+          date: dateStr,
+          status: dayStatus,
+          uptimePct,
+        });
+      }
+      return history;
+    }
+
     // Process site metrics & dynamic page group assignment
     const resultSites = sites.map(site => {
-      const snap = statusMap[site.id] || { status: 'operational', latency: 42, history: [] };
+      const snap = statusMap[site.id] || null;
       
       let assignedGroup = '默认监视分组';
       if (pageConfig.groupSites && Object.keys(pageConfig.groupSites).length > 0) {
@@ -95,12 +128,20 @@ async function handleStatusRequest(context) {
         }
       }
 
+      const realStatus = snap ? (snap.status === 'up' ? 'operational' : snap.status) : 'operational';
+      const realLatency = snap ? (snap.latency || 0) : 0;
+      const realUptime30d = snap ? (snap.uptime30d ?? 100) : 100;
+      const realHistory = build30DaysHistory(snap, realStatus);
+
       return {
         ...site,
         group: assignedGroup,
-        status: snap.status || 'operational',
-        latency: snap.latency || 42,
-        history: snap.history || getMockHistory(),
+        status: realStatus,
+        latency: realLatency,
+        uptime30d: realUptime30d,
+        history: realHistory,
+        lastChecked: snap?.lastChecked || null,
+        errorMsg: snap?.errorMsg || null,
       };
     });
 
@@ -141,20 +182,4 @@ async function handleStatusRequest(context) {
       },
     });
   }
-}
-
-function getMockSites() {
-  return [];
-}
-
-function getMockHistory() {
-  const history = [];
-  for (let i = 0; i < 30; i++) {
-    history.push({
-      date: new Date(Date.now() - (29 - i) * 86400000).toISOString().split('T')[0],
-      status: 'operational',
-      uptimePct: 100,
-    });
-  }
-  return history;
 }

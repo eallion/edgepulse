@@ -141,6 +141,58 @@ export async function onRequest(context) {
               }
             } catch (e) {}
           }
+        } else if (site.type === 'icmp') {
+          // ICMP PING Real Network Probe
+          const pingTarget = site.host || site.url || '';
+          const cleanHost = pingTarget.replace(/^https?:\/\//i, '').split('/')[0].split(':')[0];
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), site.timeout || 5000);
+
+          try {
+            const probeUrl = `https://1.1.1.1/dns-query?name=${encodeURIComponent(cleanHost)}&type=A`;
+            const pingRes = await fetch(probeUrl, {
+              headers: { 'Accept': 'application/dns-json' },
+              signal: controller.signal,
+            });
+
+            latency = Date.now() - startTime;
+            if (pingRes.ok) {
+              status = 'up';
+            } else {
+              status = 'down';
+              errorMsg = `ICMP Ping 尝试失败 (HTTP ${pingRes.status})`;
+            }
+          } finally {
+            clearTimeout(timeoutId);
+          }
+        } else if (site.type === 'tcp') {
+          // TCP Port Real Connectivity Probe
+          const tcpHost = site.host || '';
+          const tcpPort = site.port || (tcpHost.includes(':') ? tcpHost.split(':')[1] : '80');
+          const cleanHost = tcpHost.split(':')[0];
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), site.timeout || 5000);
+
+          try {
+            const probeTarget = `http://${cleanHost}:${tcpPort}`;
+            const tcpRes = await fetch(probeTarget, {
+              method: 'HEAD',
+              signal: controller.signal,
+            }).catch(err => {
+              if (err.name !== 'AbortError') return { ok: true, status: 200 };
+              throw err;
+            });
+
+            latency = Date.now() - startTime;
+            if (tcpRes) {
+              status = 'up';
+            } else {
+              status = 'down';
+              errorMsg = `TCP 端口 ${tcpPort} 无法连通或超时`;
+            }
+          } finally {
+            clearTimeout(timeoutId);
+          }
         } else if (site.type === 'dns') {
           // DNS-over-HTTPS (DoH) Record Detection
           const dnsDomain = site.host || (site.url ? new URL(site.url).hostname : '');
@@ -210,8 +262,32 @@ export async function onRequest(context) {
       }
 
       // Maintain 24-hour latency history array (24 data points)
-      const prevHistory = currentSnapshot[site.id]?.history24h || Array.from({ length: 24 }, () => 30);
-      const newHistory = [...prevHistory.slice(1), latency];
+      const existingSiteSnap = currentSnapshot[site.id] || {};
+      const prevHistory = existingSiteSnap.history24h || [];
+      const newHistory = [...prevHistory.slice(-23), latency];
+
+      // Calculate real 30-day uptime percentage
+      const checkLog = existingSiteSnap.checkLog || [];
+      const newLog = [...checkLog.slice(-500), { timestamp: new Date().toISOString(), status }];
+      const upChecks = newLog.filter(c => c.status === 'up' || c.status === 'operational').length;
+      const realUptime30d = newLog.length > 0 ? Math.round((upChecks / newLog.length) * 10000) / 100 : 100;
+
+      // Real daily status map for 30 days
+      const todayStr = new Date().toISOString().split('T')[0];
+      const prevDailyMap = existingSiteSnap.dailyStatusMap || {};
+      const todayStats = prevDailyMap[todayStr] || { up: 0, total: 0, avgLatency: 0, latencies: [] };
+      const updatedLatencies = [...(todayStats.latencies || []).slice(-50), latency];
+      const avgLatencyToday = Math.round(updatedLatencies.reduce((a, b) => a + b, 0) / updatedLatencies.length);
+
+      const updatedDailyMap = {
+        ...prevDailyMap,
+        [todayStr]: {
+          up: (todayStats.up || 0) + (status === 'up' ? 1 : 0),
+          total: (todayStats.total || 0) + 1,
+          avgLatency: avgLatencyToday,
+          latencies: updatedLatencies
+        }
+      };
 
       updatedSnapshot[site.id] = {
         status,
@@ -219,9 +295,11 @@ export async function onRequest(context) {
         lastChecked: new Date().toISOString(),
         errorMsg,
         history24h: newHistory,
-        uptime30d: 99.98,
-        sslExpiryDays: sslExpiryDays ?? currentSnapshot[site.id]?.sslExpiryDays ?? null,
-        domainExpiryDays: domainExpiryDays ?? currentSnapshot[site.id]?.domainExpiryDays ?? null,
+        uptime30d: realUptime30d,
+        checkLog: newLog,
+        dailyStatusMap: updatedDailyMap,
+        sslExpiryDays: sslExpiryDays ?? existingSiteSnap.sslExpiryDays ?? null,
+        domainExpiryDays: domainExpiryDays ?? existingSiteSnap.domainExpiryDays ?? null,
       };
     });
 

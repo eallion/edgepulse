@@ -105,9 +105,21 @@ async function handleConfig(context) {
         });
       }
 
-      // Normal config save/update: merge into globalThis
+      // Fetch latest KV config before merging to ensure multi-isolate consistency
+      let currentKVConfig = kv ? await kv.get('config', 'json') : null;
+      if (!currentKVConfig) {
+        currentKVConfig = globalThis.__EDGEPULSE_CONFIG__ || {
+          title: 'EdgePulse Status',
+          favicon: '/public/images/logo.svg',
+          icp: '',
+          sites: [],
+          alerts: {},
+          groups: ['default'],
+        };
+      }
+
       globalThis.__EDGEPULSE_CONFIG__ = {
-        ...globalThis.__EDGEPULSE_CONFIG__,
+        ...currentKVConfig,
         ...body,
       };
 
