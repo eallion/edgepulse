@@ -110,7 +110,7 @@ function renderPage(data) {
   const icpContainer = document.getElementById('icpContainer');
   const icpText = document.getElementById('icpText');
   if (data.icp && data.icp.trim()) {
-    if (icpText) icpText.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -0.15em; margin-right: 0.25rem;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>${data.icp.trim()}`;
+    if (icpText) icpText.innerHTML = `<img src="/public/images/icp.webp" width="14" height="14" style="vertical-align: -0.15em; margin-right: 0.25rem; object-fit: contain;">${data.icp.trim()}`;
     if (icpContainer) icpContainer.style.display = 'inline';
   } else {
     if (icpContainer) icpContainer.style.display = 'none';
