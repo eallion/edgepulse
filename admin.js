@@ -828,58 +828,6 @@ function isRootDomain(hostname) {
   return cctlds.includes(lastTwo) && parts.length === 3;
 }
 
-// --- Local Storage Mock Sites Management ---
-function getMockSites() {
-  try {
-    const raw = localStorage.getItem('edgepulse_mock_sites');
-    return raw ? JSON.parse(raw) : [];
-  } catch (e) {
-    return [];
-  }
-}
-
-function saveMockSites(list) {
-  try {
-    localStorage.setItem('edgepulse_mock_sites', JSON.stringify(list));
-  } catch (e) {}
-  updateMockSitesBtnState();
-}
-
-function clearMockSitesData() {
-  const count = getMockSites().length;
-  if (count === 0) {
-    showToast('本地当前没有模拟测试数据', 'info');
-    return;
-  }
-
-  showConfirm('清理测试数据', `确认清理保存在本机的 ${count} 个模拟测试节点？此操作只删除测试数据，绝不影响 KV 数据库中的任何正式监控节点。`).then(confirmed => {
-    if (confirmed) {
-      localStorage.removeItem('edgepulse_mock_sites');
-      updateMockSitesBtnState();
-      renderSitesTable(getAllSitesCombined());
-      showToast(`已成功清理 ${count} 个本地模拟测试节点！`, 'success');
-    }
-  });
-}
-
-function updateMockSitesBtnState() {
-  const hasMock = getMockSites().length > 0;
-  ['sitesListClearMockBtn', 'addSiteClearMockBtn'].forEach(id => {
-    const btn = document.getElementById(id);
-    if (btn) {
-      btn.style.display = 'inline-flex';
-      btn.style.opacity = hasMock ? '1' : '0.45';
-      btn.style.cursor = hasMock ? 'pointer' : 'not-allowed';
-      btn.title = hasMock ? '一键清理保存在本机的模拟测试数据' : '当前本地没有可清理的模拟测试数据';
-    }
-  });
-}
-
-function getAllSitesCombined() {
-  const realSites = cachedConfig.sites || [];
-  const mockSites = getMockSites();
-  return [...realSites, ...mockSites];
-}
 
 function onUrlOrHostInput() {
   const siteUrlEl = document.getElementById('newSiteUrl');
@@ -945,14 +893,14 @@ async function loadConfig() {
       }
     }
     
-    renderSitesTable(getAllSitesCombined());
+    renderSitesTable(cachedConfig.sites || []);
     fillSettingsForm(cachedConfig);
     updateAvailableChannelsAndGroups(cachedConfig);
   } catch (err) {
     const localSaved = localStorage.getItem('edgepulse_local_config');
     if (localSaved) {
       cachedConfig = JSON.parse(localSaved);
-      renderSitesTable(getAllSitesCombined());
+      renderSitesTable(cachedConfig.sites || []);
       fillSettingsForm(cachedConfig);
       updateAvailableChannelsAndGroups(cachedConfig);
     }
@@ -962,7 +910,6 @@ async function loadConfig() {
 function renderSitesTable(sites) {
   const tbody = document.getElementById('sitesTableBody');
   tbody.innerHTML = '';
-  updateMockSitesBtnState();
 
   if (!sites || sites.length === 0) {
     tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">暂无监控节点，请在【➕ 添加监控节点】中添加</td></tr>';
@@ -991,10 +938,6 @@ function renderSitesTable(sites) {
 
     const targetVal = site.url || site.host || site.domain || '-';
     const typeBadgeText = site.type === 'dns' ? `DNS (${site.dnsType || 'A'})` : site.type.toUpperCase();
-
-    const mockBadge = site.isMockData 
-      ? '<span class="badge" style="background: rgba(245, 158, 11, 0.15); color: var(--color-amber); font-size: 0.7rem; margin-left: 0.35rem; font-weight: normal;" title="此节点仅存在本地浏览器中">测试数据</span>' 
-      : '';
 
     tr.innerHTML = `
       <td style="white-space: nowrap;"><strong>${site.name}</strong>${mockBadge}</td>
@@ -1292,202 +1235,18 @@ async function handleCreateSite(event) {
 }
 
 async function deleteSite(index) {
-  const combined = getAllSitesCombined();
-  const site = combined[index];
+  const site = (cachedConfig.sites || [])[index];
   if (!site) return;
 
-  if (site.isMockData) {
-    const confirmed = await showConfirm('删除测试节点', `确定删除本地模拟测试节点【${site.name}】？此数据仅保存在当前浏览器。`);
-    if (!confirmed) return;
-
-    const currentMock = getMockSites();
-    const filteredMock = currentMock.filter(m => m.id !== site.id);
-    saveMockSites(filteredMock);
-    renderSitesTable(getAllSitesCombined());
-    showToast(`测试节点【${site.name}】已从本地移除！`, 'success');
-    return;
-  }
-
-  const confirmed = await showConfirm('确认删除节点', `确定要彻底删除正式监控节点【${site.name}】吗？此操作将更新 KV 数据库。`);
+  const confirmed = await showConfirm('确认删除节点', `确定要彻底删除监控节点【${site.name}】吗？此操作将更新 KV 数据库。`);
   if (!confirmed) return;
 
   const token = sessionStorage.getItem('edgepulse_token');
-  const updatedSites = (cachedConfig.sites || []).filter(s => s.id !== site.id);
+  const updatedSites = (cachedConfig.sites || []).filter((_, i) => i !== index);
 
   const updatedConfig = { ...cachedConfig, sites: updatedSites };
   await saveConfig(updatedConfig, token, `监控节点【${site.name}】已从 KV 数据库删除！`);
-  renderSitesTable(getAllSitesCombined());
-}
-
-function loadMockDevSites() {
-  const seq = Date.now().toString().slice(-4);
-  const randNum = Math.floor(100 + Math.random() * 900);
-
-  const mockSites = [
-    // 1. HTTP(S) 3个
-    {
-      id: `site-mock-http-1-${Date.now()}-${randNum}`,
-      isMockData: true,
-      name: `Cloudflare 网关 (测试 #${seq})`,
-      type: 'http',
-      url: `https://1.1.1.1?ref=${randNum}`,
-      checkDomain: true,
-      checkSsl: true,
-      domainWarnDays: 30,
-      sslWarnDays: 30,
-      alertChannels: ['lark']
-    },
-    {
-      id: `site-mock-http-2-${Date.now()}-${randNum}`,
-      isMockData: true,
-      name: `GitHub Status 接口 (测试 #${seq})`,
-      type: 'http',
-      url: `https://www.githubstatus.com/api/v2/status.json?v=${randNum}`,
-      checkDomain: false,
-      checkSsl: true,
-      sslWarnDays: 15,
-      alertChannels: ['telegram']
-    },
-    {
-      id: `site-mock-http-3-${Date.now()}-${randNum}`,
-      isMockData: true,
-      name: `Vercel 应用边缘节点 (测试 #${seq})`,
-      type: 'http',
-      url: `https://vercel.com?test=${randNum}`,
-      checkDomain: true,
-      checkSsl: true,
-      domainWarnDays: 45,
-      sslWarnDays: 30,
-      alertChannels: ['wechat']
-    },
-
-    // 2. ICMP PING 3个
-    {
-      id: `site-mock-icmp-1-${Date.now()}-${randNum}`,
-      isMockData: true,
-      name: `1.1.1.1 DNS PING (测试 #${seq})`,
-      type: 'icmp',
-      host: '1.1.1.1',
-      alertChannels: ['lark']
-    },
-    {
-      id: `site-mock-icmp-2-${Date.now()}-${randNum}`,
-      isMockData: true,
-      name: `Google Public DNS (测试 #${seq})`,
-      type: 'icmp',
-      host: '8.8.8.8',
-      alertChannels: ['bark']
-    },
-    {
-      id: `site-mock-icmp-3-${Date.now()}-${randNum}`,
-      isMockData: true,
-      name: `阿里公共 DNS 探针 (测试 #${seq})`,
-      type: 'icmp',
-      host: '223.5.5.5',
-      alertChannels: ['dingtalk']
-    },
-
-    // 3. TCP 端口检测 3个
-    {
-      id: `site-mock-tcp-1-${Date.now()}-${randNum}`,
-      isMockData: true,
-      name: `VPS SSH 远程端口 22 (测试 #${seq})`,
-      type: 'tcp',
-      host: `127.0.0.1:22`,
-      port: '22',
-      alertChannels: ['lark']
-    },
-    {
-      id: `site-mock-tcp-2-${Date.now()}-${randNum}`,
-      isMockData: true,
-      name: `MySQL 数据库 3306 (测试 #${seq})`,
-      type: 'tcp',
-      host: `127.0.0.1:3306`,
-      port: '3306',
-      alertChannels: ['smtp']
-    },
-    {
-      id: `site-mock-tcp-3-${Date.now()}-${randNum}`,
-      isMockData: true,
-      name: `Redis 高速缓存 6379 (测试 #${seq})`,
-      type: 'tcp',
-      host: `127.0.0.1:6379`,
-      port: '6379',
-      alertChannels: ['wechat']
-    },
-
-    // 4. DNS 记录检测 3个
-    {
-      id: `site-mock-dns-1-${Date.now()}-${randNum}`,
-      isMockData: true,
-      name: `Google A 记录探针 (测试 #${seq})`,
-      type: 'dns',
-      host: 'google.com',
-      dnsType: 'A',
-      dnsExpected: '',
-      alertChannels: ['lark']
-    },
-    {
-      id: `site-mock-dns-2-${Date.now()}-${randNum}`,
-      isMockData: true,
-      name: `Cloudflare AAAA 探针 (测试 #${seq})`,
-      type: 'dns',
-      host: 'cloudflare.com',
-      dnsType: 'AAAA',
-      dnsExpected: '',
-      alertChannels: ['telegram']
-    },
-    {
-      id: `site-mock-dns-3-${Date.now()}-${randNum}`,
-      isMockData: true,
-      name: `GitHub Pages CNAME (测试 #${seq})`,
-      type: 'dns',
-      host: 'github.io',
-      dnsType: 'CNAME',
-      dnsExpected: '',
-      alertChannels: ['wechat']
-    },
-
-    // 5. Push 被动打卡 3个
-    {
-      id: `site-mock-push-1-${Date.now()}-${randNum}`,
-      isMockData: true,
-      name: `NAS 异地备份打卡 (测试 #${seq})`,
-      type: 'push',
-      pushToken: `pulse_sec_mock_nas_${randNum}`,
-      url: `${window.location.origin}/api/push?token=pulse_sec_mock_nas_${randNum}`,
-      pushTimeout: 300,
-      alertChannels: ['bark']
-    },
-    {
-      id: `site-mock-push-2-${Date.now()}-${randNum}`,
-      isMockData: true,
-      name: `MySQL 冷备打卡 (测试 #${seq})`,
-      type: 'push',
-      pushToken: `pulse_sec_mock_db_${randNum}`,
-      url: `${window.location.origin}/api/push?token=pulse_sec_mock_db_${randNum}`,
-      pushTimeout: 86400,
-      alertChannels: ['smtp']
-    },
-    {
-      id: `site-mock-push-3-${Date.now()}-${randNum}`,
-      isMockData: true,
-      name: `OpenWrt Cron 保活 (测试 #${seq})`,
-      type: 'push',
-      pushToken: `pulse_sec_mock_openwrt_${randNum}`,
-      url: `${window.location.origin}/api/push?token=pulse_sec_mock_openwrt_${randNum}`,
-      pushTimeout: 180,
-      alertChannels: ['lark']
-    }
-  ];
-
-  const currentMock = getMockSites();
-  const updatedMock = [...currentMock, ...mockSites];
-  saveMockSites(updatedMock);
-
-  renderSitesTable(getAllSitesCombined());
-  showToast('已在本地浏览器成功生成 15 个测试节点（仅存本机，未上传至 KV）！', 'success');
-  switchTab('sites');
+  renderSitesTable(cachedConfig.sites || []);
 }
 
 async function handleSaveSettings(event) {
