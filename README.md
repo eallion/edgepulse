@@ -7,7 +7,7 @@
 ## ✨ 核心特性
 
 - 🛡️ **纯 EdgeOne Serverless 架构**：基于 Edge CDN 静态托管 + V8 Edge Functions + EdgeOne KV Storage，无需配置或购买独立 CVM / Docker。
-- 🌐 **多域名动态状态页 (Multi-Domain Status Pages)**：同一套部署服务支持绑定无限个域名（如 `status.a.com`, `status.b.com`），根据访问域名自动匹配展示对应的状态页与专属服务节点。
+- 🌐 **多域名动态状态页 (Multi-Domain Status Pages)**：同一套部署服务支持绑定无限个域名（如 `status.a.com`, `status.b.com`），根据访问域名自动匹配展示对应的状态页，**支持针对不同 Status 监控页分配关联特定监控分组（Groups）与特定监控节点（Sites）**。
 - 🎨 **Cloudflare Kumo UI 设计系统 (基于 Base UI 代币)**：
   - 🍊 **Kumo 视觉精美美学**：全站整体采用 Cloudflare Kumo 哑光黑 Obsidian 背景、Cloudflare 标志性橙色 Accent（`#f6821f`）、Base UI 细微 1px 细线边框（`#27272a`）及胶囊圆角元素。
   - 🎛️ **Kumo Toggle Switch 开启开关**：设置中所有服务开关全面升级为 Cloudflare Kumo 风格的圆角滑块 Toggle Switch，开启滑动时带有 Cloudflare 橙色高亮与 0.25s 贝塞尔曲线过渡。
@@ -76,7 +76,7 @@
   - 🌐 **站点基本信息配置 (Title & Favicon)**：支持自定义配置全站 **站点标题 (Title)** 及 **Favicon 浏览器图标**（支持在线图片 URL 填入，或选择本地图片自动转为 `data:image/png;base64` 文本存储存入 KV 数据库，实现零外链零依赖的本地图标化）。
   - 🌐 **站点基本配置与 ICP 备案号**：支持在后台自定义配置 ICP 备案号（如 `粤ICP备12345678号-1`），配置后会自动动态渲染在公共状态页 Footer 的【刷新 (30s)】文本左侧（留空则自动隐藏）。
   - 🔑 **Passkey 无密码极速登录 (WebAuthn)**：原生支持 Bitwarden 插件弹窗、macOS TouchID/FaceID 及 YubiKey 硬件密钥注册与免密登录。
-  - 🛡️ **2FA 双因素身份验证 (TOTP)**：支持绑定 Google Authenticator、Bitwarden 2FA 等身份验证器，登录时进行 6 位数动态验证。
+  - 🛡️ **2FA 双因素身份验证 (TOTP)**：支持生成专属 Base32 密钥与实时渲染绑定二维码，扫码轻松绑定 Bitwarden、1Password 或 Google Authenticator 等身份验证器，登录时进行 RFC 6238 标准 6 位数动态验证。
   - 🤖 **Cloudflare Turnstile 人机防护 (默认关闭)**：支持集成 Cloudflare 隐形人机验证，并**原生支持 Cloudflare 官方 Dev Site Keys 调试**（`1x00000000000000000000AA` 总是通过 / `2x00000000000000000000AB` 总是拦截）。
   - 📍 **节点列表与管理**：查看/创建/删除监控节点，**按节点联动勾选仅属于该节点的告警通道**（如仅给节点 A 勾选飞书、节点 B 勾选 Telegram+Email）。
   - ⚙️ **合并统一设置**：
