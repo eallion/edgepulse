@@ -811,10 +811,15 @@ function clearMockSitesData() {
 
 function updateMockSitesBtnState() {
   const hasMock = getMockSites().length > 0;
-  const btn1 = document.getElementById('sitesListClearMockBtn');
-  if (btn1) btn1.style.display = hasMock ? 'inline-flex' : 'none';
-  const btn2 = document.getElementById('addSiteClearMockBtn');
-  if (btn2) btn2.style.display = hasMock ? 'inline-flex' : 'none';
+  ['sitesListClearMockBtn', 'addSiteClearMockBtn'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) {
+      btn.style.display = 'inline-flex';
+      btn.style.opacity = hasMock ? '1' : '0.45';
+      btn.style.cursor = hasMock ? 'pointer' : 'not-allowed';
+      btn.title = hasMock ? '一键清理保存在本机的模拟测试数据' : '当前本地没有可清理的模拟测试数据';
+    }
+  });
 }
 
 function getAllSitesCombined() {
