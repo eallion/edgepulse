@@ -700,6 +700,15 @@ function copyNewSitePushUrl() {
   }
 }
 
+function autoCompleteHttps(inputEl) {
+  if (!inputEl) return;
+  let val = inputEl.value ? inputEl.value.trim() : '';
+  if (val && !/^https?:\/\//i.test(val)) {
+    inputEl.value = 'https://' + val;
+    onUrlOrHostInput();
+  }
+}
+
 function isRootDomain(hostname) {
   if (!hostname) return false;
   const clean = hostname.replace(/^https?:\/\//i, '').split('/')[0].split(':')[0];
@@ -1049,8 +1058,11 @@ async function handleCreateSite(event) {
   const token = sessionStorage.getItem('edgepulse_token');
   const type = document.getElementById('newSiteType').value;
   const name = document.getElementById('newSiteName').value;
-  const url = document.getElementById('newSiteUrl').value;
-  const host = document.getElementById('newSiteHost').value;
+  let url = document.getElementById('newSiteUrl').value.trim();
+  if (type === 'http' && url && !/^https?:\/\//i.test(url)) {
+    url = 'https://' + url;
+  }
+  const host = document.getElementById('newSiteHost').value.trim();
   
   let pushUrlVal = '';
   let pushTokenVal = '';
