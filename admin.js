@@ -637,18 +637,32 @@ function toggleAdminFormFields() {
   onUrlOrHostInput();
 }
 
+function generateLongPushToken() {
+  let hex = '';
+  if (window.crypto && window.crypto.getRandomValues) {
+    const array = new Uint8Array(24);
+    window.crypto.getRandomValues(array);
+    hex = Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+  } else {
+    hex = Date.now().toString(36) + Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
+  }
+  return 'pulse_sec_' + hex;
+}
+
 function generateOrRefreshNewSitePushUrl() {
   const input = document.getElementById('newSitePushUrl');
   const codeHint = document.getElementById('pushUrlCodeHint');
+  const cronHint = document.getElementById('pushUrlCronHint');
   if (!input) return;
 
   if (!input.value) {
-    const token = 'pulse_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 6);
+    const token = generateLongPushToken();
     const pushUrl = `${window.location.origin}/api/push?token=${token}`;
     input.value = pushUrl;
     input.setAttribute('data-token', token);
   }
   if (codeHint) codeHint.textContent = input.value;
+  if (cronHint) cronHint.textContent = input.value;
 }
 
 function copyNewSitePushUrl() {
