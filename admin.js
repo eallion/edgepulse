@@ -890,29 +890,19 @@ async function loadConfig() {
       data = JSON.parse(text);
     } catch (e) {}
 
-    if (data && typeof data === 'object') {
-      cachedConfig = data;
-    } else {
-      // LocalStorage fallback
-      const localSaved = localStorage.getItem('edgepulse_local_config');
-      if (localSaved) {
-        cachedConfig = JSON.parse(localSaved);
+      if (data && typeof data === 'object') {
+        cachedConfig = data;
       }
-    }
-    
-    renderSitesTable(cachedConfig.sites || []);
-    fillSettingsForm(cachedConfig);
-    updateAvailableChannelsAndGroups(cachedConfig);
-  } catch (err) {
-    const localSaved = localStorage.getItem('edgepulse_local_config');
-    if (localSaved) {
-      cachedConfig = JSON.parse(localSaved);
+      
+      renderSitesTable(cachedConfig.sites || []);
+      fillSettingsForm(cachedConfig);
+      updateAvailableChannelsAndGroups(cachedConfig);
+    } catch (err) {
       renderSitesTable(cachedConfig.sites || []);
       fillSettingsForm(cachedConfig);
       updateAvailableChannelsAndGroups(cachedConfig);
     }
   }
-}
 
 function renderSitesTable(sites) {
   const tbody = document.getElementById('sitesTableBody');
@@ -1455,9 +1445,9 @@ async function importConfigJson() {
 }
 
 async function saveConfig(configPayload, token, successMsg) {
-  // Always keep local memory and LocalStorage in sync
+  // Always keep local memory in sync
   cachedConfig = configPayload;
-  localStorage.setItem('edgepulse_local_config', JSON.stringify(configPayload));
+  localStorage.removeItem('edgepulse_local_config');
 
   try {
     const res = await fetch('/api/config', {

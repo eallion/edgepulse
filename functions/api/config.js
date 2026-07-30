@@ -47,12 +47,20 @@ async function handleConfig(context) {
 
   try {
     if (request.method === 'GET') {
+      const defaultConfig = {
+        title: 'EdgePulse Status',
+        favicon: '/public/images/logo.svg',
+        icp: '',
+        sites: [],
+        alerts: {},
+        groups: ['default'],
+      };
+
       let config = kv ? await kv.get('config', 'json') : null;
       if (!config) {
-        config = globalThis.__EDGEPULSE_CONFIG__;
-      } else {
-        globalThis.__EDGEPULSE_CONFIG__ = config;
+        config = kv ? defaultConfig : (globalThis.__EDGEPULSE_CONFIG__ || defaultConfig);
       }
+      globalThis.__EDGEPULSE_CONFIG__ = config;
 
       return new Response(JSON.stringify(config), {
         status: 200,
@@ -77,14 +85,7 @@ async function handleConfig(context) {
         }
 
         // Reset globalThis fallback
-        globalThis.__EDGEPULSE_CONFIG__ = {
-          title: 'EdgePulse Status',
-          favicon: '',
-          icp: '',
-          sites: [],
-          alerts: {},
-          groups: ['default'],
-        };
+        globalThis.__EDGEPULSE_CONFIG__ = { ...defaultConfig };
 
         if (kv) {
           await kv.delete('config');
@@ -100,14 +101,7 @@ async function handleConfig(context) {
       // Fetch latest KV config before merging to ensure multi-isolate consistency
       let currentKVConfig = kv ? await kv.get('config', 'json') : null;
       if (!currentKVConfig) {
-        currentKVConfig = globalThis.__EDGEPULSE_CONFIG__ || {
-          title: 'EdgePulse Status',
-          favicon: '/public/images/logo.svg',
-          icp: '',
-          sites: [],
-          alerts: {},
-          groups: ['default'],
-        };
+        currentKVConfig = { ...defaultConfig };
       }
 
       globalThis.__EDGEPULSE_CONFIG__ = {
