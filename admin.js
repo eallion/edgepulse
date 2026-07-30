@@ -384,6 +384,29 @@ function renderPagesTab() {
   renderPagesTable(cachedConfig.pages || []);
 }
 
+function filterPageSitesByType(typeFilter, btnEl) {
+  document.querySelectorAll('.type-filter-btn').forEach(btn => {
+    btn.style.background = 'transparent';
+    btn.style.color = 'var(--text-secondary)';
+    btn.classList.remove('active');
+  });
+  if (btnEl) {
+    btnEl.style.background = 'var(--color-accent)';
+    btnEl.style.color = 'white';
+    btnEl.classList.add('active');
+  }
+
+  const items = document.querySelectorAll('.page-site-cb-item');
+  items.forEach(item => {
+    const itemType = item.getAttribute('data-type');
+    if (typeFilter === 'all' || itemType === typeFilter) {
+      item.style.display = 'flex';
+    } else {
+      item.style.display = 'none';
+    }
+  });
+}
+
 function renderPageGroupSitesBoxes(currentGroupSites = {}) {
   const container = document.getElementById('pageGroupSitesContainer');
   if (!container) return;
@@ -396,13 +419,25 @@ function renderPageGroupSitesBoxes(currentGroupSites = {}) {
     return;
   }
 
-  container.innerHTML = groups.map(g => {
+  const filterBarHtml = `
+    <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.85rem; flex-wrap: wrap; background: var(--bg-card-secondary); padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid var(--border-card);">
+      <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-right: 0.3rem;">🔍 按节点类型筛选:</span>
+      <button type="button" class="type-filter-btn active" data-type="all" onclick="filterPageSitesByType('all', this)" style="padding: 0.2rem 0.6rem; font-size: 0.75rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--color-accent); color: white; cursor: pointer;">全部 (${sites.length})</button>
+      <button type="button" class="type-filter-btn" data-type="http" onclick="filterPageSitesByType('http', this)" style="padding: 0.2rem 0.6rem; font-size: 0.75rem; border-radius: 4px; border: 1px solid var(--border-color); background: transparent; color: var(--text-secondary); cursor: pointer;">HTTP(S)</button>
+      <button type="button" class="type-filter-btn" data-type="icmp" onclick="filterPageSitesByType('icmp', this)" style="padding: 0.2rem 0.6rem; font-size: 0.75rem; border-radius: 4px; border: 1px solid var(--border-color); background: transparent; color: var(--text-secondary); cursor: pointer;">ICMP</button>
+      <button type="button" class="type-filter-btn" data-type="tcp" onclick="filterPageSitesByType('tcp', this)" style="padding: 0.2rem 0.6rem; font-size: 0.75rem; border-radius: 4px; border: 1px solid var(--border-color); background: transparent; color: var(--text-secondary); cursor: pointer;">TCP</button>
+      <button type="button" class="type-filter-btn" data-type="dns" onclick="filterPageSitesByType('dns', this)" style="padding: 0.2rem 0.6rem; font-size: 0.75rem; border-radius: 4px; border: 1px solid var(--border-color); background: transparent; color: var(--text-secondary); cursor: pointer;">DNS</button>
+      <button type="button" class="type-filter-btn" data-type="push" onclick="filterPageSitesByType('push', this)" style="padding: 0.2rem 0.6rem; font-size: 0.75rem; border-radius: 4px; border: 1px solid var(--border-color); background: transparent; color: var(--text-secondary); cursor: pointer;">PUSH</button>
+    </div>
+  `;
+
+  const cardsHtml = groups.map(g => {
     const selectedSitesForGroup = currentGroupSites[g] || [];
 
     const siteCheckboxesHtml = sites.map(s => {
       const isChecked = selectedSitesForGroup.includes(s.id) ? 'checked' : '';
       return `
-        <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; cursor: pointer; color: var(--text-primary);">
+        <label class="page-site-cb-item" data-type="${s.type.toLowerCase()}" style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; cursor: pointer; color: var(--text-primary);">
           <input type="checkbox" class="page-site-cb" data-group="${g}" value="${s.id}" ${isChecked}>
           <span>${s.name} <small style="color: var(--text-muted);">(${s.type.toUpperCase()})</small></span>
         </label>
@@ -413,6 +448,17 @@ function renderPageGroupSitesBoxes(currentGroupSites = {}) {
       <div class="group-assignment-card" style="background: var(--bg-card-secondary); border: 1px solid var(--border-card); border-radius: 8px; padding: 0.85rem;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.4rem;">
           <span style="font-weight: 600; color: var(--color-accent); font-size: 0.9rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -0.15em; margin-right: 0.3rem;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>${g}</span>
+          <button type="button" class="btn-secondary" style="padding: 0.15rem 0.4rem; font-size: 0.75rem; color: var(--color-red);" onclick="deletePageGroupSync('${g}')">删除分组</button>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.5rem;">
+          ${siteCheckboxesHtml}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  container.innerHTML = filterBarHtml + cardsHtml;
+}ound" stroke-linejoin="round" style="vertical-align: -0.15em; margin-right: 0.3rem;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>${g}</span>
           <button type="button" class="btn-secondary" style="padding: 0.15rem 0.4rem; font-size: 0.75rem; color: var(--color-red);" onclick="deletePageGroupSync('${g}')">删除分组</button>
         </div>
         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.5rem;">
@@ -1402,4 +1448,160 @@ function copyTotpSecret() {
   } else {
     showToast('2FA 密钥：' + secret, 'info', '2FA 密钥');
   }
+}
+
+/* DEV Mock Data Generator (3 items for each of the 5 monitoring types = 15 items total) */
+async function loadMockDevSites() {
+  const mockSites = [
+    // 1. HTTP(S) 3个
+    {
+      id: `site-mock-http-1`,
+      name: 'EdgePulse 官网主站',
+      type: 'http',
+      url: 'https://pulse.eallion.com',
+      checkDomain: true,
+      checkSsl: true,
+      domainWarnDays: 30,
+      sslWarnDays: 30,
+      alertChannels: ['lark']
+    },
+    {
+      id: `site-mock-http-2`,
+      name: 'Cloudflare API Gateway',
+      type: 'http',
+      url: 'https://api.cloudflare.com',
+      checkDomain: false,
+      checkSsl: true,
+      domainWarnDays: 30,
+      sslWarnDays: 30,
+      alertChannels: ['wechat']
+    },
+    {
+      id: `site-mock-http-3`,
+      name: 'GitHub Status Center',
+      type: 'http',
+      url: 'https://www.githubstatus.com',
+      checkDomain: false,
+      checkSsl: true,
+      domainWarnDays: 30,
+      sslWarnDays: 30,
+      alertChannels: ['telegram']
+    },
+
+    // 2. ICMP PING 3个
+    {
+      id: `site-mock-icmp-1`,
+      name: 'Cloudflare Public DNS PING',
+      type: 'icmp',
+      host: '1.1.1.1',
+      alertChannels: ['lark']
+    },
+    {
+      id: `site-mock-icmp-2`,
+      name: 'Google Public DNS PING',
+      type: 'icmp',
+      host: '8.8.8.8',
+      alertChannels: ['bark']
+    },
+    {
+      id: `site-mock-icmp-3`,
+      name: 'Aliyun DNS PING (国内)',
+      type: 'icmp',
+      host: '223.5.5.5',
+      alertChannels: ['dingtalk']
+    },
+
+    // 3. TCP 端口检测 3个
+    {
+      id: `site-mock-tcp-1`,
+      name: 'VPS SSH 远程管理端口 (22)',
+      type: 'tcp',
+      host: '127.0.0.1:22',
+      port: '22',
+      alertChannels: ['lark']
+    },
+    {
+      id: `site-mock-tcp-2`,
+      name: 'MySQL 核心数据库 (3306)',
+      type: 'tcp',
+      host: '127.0.0.1:3306',
+      port: '3306',
+      alertChannels: ['smtp']
+    },
+    {
+      id: `site-mock-tcp-3`,
+      name: 'Redis 高速缓存集群 (6379)',
+      type: 'tcp',
+      host: '127.0.0.1:6379',
+      port: '6379',
+      alertChannels: ['wechat']
+    },
+
+    // 4. DNS 记录检测 3个
+    {
+      id: `site-mock-dns-1`,
+      name: 'Google 域名 IPv4 A 记录',
+      type: 'dns',
+      host: 'google.com',
+      dnsType: 'A',
+      dnsExpected: '',
+      alertChannels: ['lark']
+    },
+    {
+      id: `site-mock-dns-2`,
+      name: 'Cloudflare IPv6 AAAA 记录',
+      type: 'dns',
+      host: 'cloudflare.com',
+      dnsType: 'AAAA',
+      dnsExpected: '',
+      alertChannels: ['telegram']
+    },
+    {
+      id: `site-mock-dns-3`,
+      name: 'GitHub Pages CNAME 校验',
+      type: 'dns',
+      host: 'github.io',
+      dnsType: 'CNAME',
+      dnsExpected: '',
+      alertChannels: ['wechat']
+    },
+
+    // 5. Push 被动打卡 3个
+    {
+      id: `site-mock-push-1`,
+      name: 'NAS 异地定时增量备份打卡',
+      type: 'push',
+      pushToken: 'pulse_sec_mock_nas_backup_01',
+      url: `${window.location.origin}/api/push?token=pulse_sec_mock_nas_backup_01`,
+      pushTimeout: 300,
+      alertChannels: ['bark']
+    },
+    {
+      id: `site-mock-push-2`,
+      name: 'MySQL 数据库每日冷备打卡',
+      type: 'push',
+      pushToken: 'pulse_sec_mock_mysql_dump_02',
+      url: `${window.location.origin}/api/push?token=pulse_sec_mock_mysql_dump_02`,
+      pushTimeout: 86400,
+      alertChannels: ['smtp']
+    },
+    {
+      id: `site-mock-push-3`,
+      name: 'OpenWrt 软路由 Cron 保活打卡',
+      type: 'push',
+      pushToken: 'pulse_sec_mock_openwrt_cron_03',
+      url: `${window.location.origin}/api/push?token=pulse_sec_mock_openwrt_cron_03`,
+      pushTimeout: 180,
+      alertChannels: ['lark']
+    }
+  ];
+
+  const updatedConfig = {
+    ...cachedConfig,
+    sites: [...(cachedConfig.sites || []), ...mockSites],
+  };
+
+  const token = sessionStorage.getItem('edgepulse_token');
+  await saveConfig(updatedConfig, token, '已为 5 种监控类型成功生成 15 个 DEV 模拟测试数据！');
+  switchTab('sites');
 }
