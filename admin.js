@@ -322,7 +322,17 @@ async function loginWithPasskey() {
 
   try {
     const challengeRes = await fetch('/api/auth/passkey/challenge');
+    if (!challengeRes.ok) {
+      const errData = await challengeRes.json().catch(() => ({}));
+      showToast(errData.error || '系统尚未绑定任何 Passkey 密钥，请先使用密码登录后在设置中绑定', 'warning', 'Passkey 提示');
+      return;
+    }
+
     const { challenge } = await challengeRes.json();
+    if (!challenge) {
+      showToast('系统尚未绑定任何 Passkey 密钥，请先使用密码登录', 'warning', 'Passkey 提示');
+      return;
+    }
 
     const credential = await navigator.credentials.get({
       publicKey: {
@@ -331,6 +341,11 @@ async function loginWithPasskey() {
         userVerification: "preferred",
       }
     });
+
+    if (!credential) {
+      showToast('未检测到有效的 Passkey 凭据', 'warning');
+      return;
+    }
 
     const verifyRes = await fetch('/api/auth/passkey/verify', {
       method: 'POST',
@@ -344,13 +359,17 @@ async function loginWithPasskey() {
     if (verifyRes.ok) {
       sessionStorage.setItem('edgepulse_token', data.token);
       sessionStorage.setItem('edgepulse_username', data.username);
-      showToast('Passkey 快速免密验证成功！', 'success', '登录成功');
+      showToast('Passkey 验证成功，正在登录...', 'success', '登录成功');
       checkAuth();
     } else {
-      showToast(data.error, 'error', 'Passkey 验证失败');
+      showToast(data.error || 'Passkey 验证失败', 'error', '验证失败');
     }
   } catch (err) {
-    showToast(err.message, 'info', 'Passkey 验证已取消');
+    if (err.name === 'NotAllowedError' || (err.message && err.message.includes('cancel'))) {
+      showToast('Passkey 验证已取消', 'info');
+    } else {
+      showToast(err.message || '系统尚未绑定任何 Passkey 密钥，请先使用密码登录', 'warning', 'Passkey 提示');
+    }
   }
 }
 
