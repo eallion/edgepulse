@@ -1463,9 +1463,10 @@ async function saveConfig(configPayload, token, successMsg) {
     let data = {};
     try { data = JSON.parse(text); } catch (e) {}
 
-    if (!res.ok && res.status !== 404 && res.status !== 500) {
-      showToast(data.error || '鉴权失效', 'error', '保存失败');
-      return;
+    if (!res.ok) {
+      const errorMsg = data.error || `请求失败 (HTTP ${res.status})`;
+      showToast(errorMsg, 'error', '保存失败');
+      return false;
     }
 
     showToast(successMsg, 'success', '系统提示');
@@ -1475,14 +1476,10 @@ async function saveConfig(configPayload, token, successMsg) {
 
     // Trigger instant background probe cycle for new/updated sites
     fetch('/api/cron').catch(() => {});
+    return true;
   } catch (err) {
-    showToast(successMsg, 'success', '系统提示');
-    fillSettingsForm(cachedConfig);
-    renderSitesTable(cachedConfig.sites || []);
-    updateAvailableChannelsAndGroups(cachedConfig);
-
-    // Trigger instant background probe cycle for new/updated sites
-    fetch('/api/cron').catch(() => {});
+    showToast(err.message || '网络无法连接到配置服务端', 'error', '保存失败');
+    return false;
   }
 }
 
