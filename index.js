@@ -110,7 +110,7 @@ function renderPage(data) {
   const icpContainer = document.getElementById('icpContainer');
   const icpText = document.getElementById('icpText');
   if (data.icp && data.icp.trim()) {
-    if (icpText) icpText.textContent = data.icp.trim();
+    if (icpText) icpText.innerHTML = `<img src="https://beian.miit.gov.cn/img/bg_logo.2ce2f33d.png" width="14" height="14" style="vertical-align: -0.15em; margin-right: 0.25rem; object-fit: contain;">${data.icp.trim()}`;
     if (icpContainer) icpContainer.style.display = 'inline';
   } else {
     if (icpContainer) icpContainer.style.display = 'none';
