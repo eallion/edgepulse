@@ -140,9 +140,14 @@ async function handleConfig(context) {
         await kv.put('config:auth', JSON.stringify(authData));
         if (body.pages && Array.isArray(body.pages)) {
           for (const page of body.pages) {
-            if (page.domain) {
+            if (page.id) {
               await kv.put(`page:${page.id}`, JSON.stringify(page));
-              await kv.put(`domain:${page.domain.trim()}`, JSON.stringify({ pageId: page.id }));
+              if (page.domain) {
+                const cleanDomain = page.domain.replace(/\s*\([^)]*\)/g, '').trim();
+                if (cleanDomain) {
+                  await kv.put(`domain:${cleanDomain}`, JSON.stringify({ pageId: page.id }));
+                }
+              }
             }
           }
         }

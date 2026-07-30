@@ -251,10 +251,15 @@ function createServiceCard(site, historyDays = 30) {
 
   // Dynamic Uptime Bar Pills (30/60/90/180)
   let barsHtml = '';
+  const historyList = (site.history && Array.isArray(site.history) && site.history.length > 0) ? site.history : [];
+  
   for (let i = 0; i < historyDays; i++) {
-    const isErrorPill = !isUp && i === (historyDays - 1);
-    const pillClass = isErrorPill ? 'down' : (site.latency > 150 ? 'degraded' : '');
-    barsHtml += `<div class="uptime-bar-pill ${pillClass}" title="Day ${i + 1}: ${isErrorPill ? 'Disruption' : 'Operational'}"></div>`;
+    const dayItem = historyList[i] || { status: 'operational', uptimePct: 100, date: `Day ${i + 1}` };
+    const pillStatus = dayItem.status || 'operational';
+    const pillClass = pillStatus === 'down' ? 'down' : (pillStatus === 'degraded' ? 'degraded' : '');
+    const dateLabel = dayItem.date ? `${dayItem.date}: ` : '';
+    const statusLabel = pillStatus === 'down' ? '服务中断' : (pillStatus === 'degraded' ? '性能受损' : '正常运行');
+    barsHtml += `<div class="uptime-bar-pill ${pillClass}" title="${dateLabel}${statusLabel} (${dayItem.uptimePct ?? 100}%)"></div>`;
   }
 
   const sparklineHtml = generateSparklineSvg(site.history24h);
