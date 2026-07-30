@@ -141,6 +141,49 @@ export async function onRequest(context) {
               }
             } catch (e) {}
           }
+        } else if (site.type === 'dns') {
+          // DNS-over-HTTPS (DoH) Record Detection
+          const dnsDomain = site.host || (site.url ? new URL(site.url).hostname : '');
+          const dnsType = site.dnsType || 'A';
+          const expectedVal = (site.dnsExpected || '').trim();
+
+          const dohUrl = `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(dnsDomain)}&type=${dnsType}`;
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), site.timeout || 5000);
+
+          try {
+            const dohRes = await fetch(dohUrl, {
+              headers: { 'Accept': 'application/dns-json' },
+              signal: controller.signal,
+            });
+
+            latency = Date.now() - startTime;
+
+            if (dohRes.ok) {
+              const dnsData = await dohRes.json();
+              if (dnsData && dnsData.Status === 0 && Array.isArray(dnsData.Answer) && dnsData.Answer.length > 0) {
+                if (expectedVal) {
+                  const match = dnsData.Answer.some(ans => ans.data && ans.data.toLowerCase().includes(expectedVal.toLowerCase()));
+                  if (match) {
+                    status = 'up';
+                  } else {
+                    status = 'down';
+                    errorMsg = `DNS ${dnsType} 响应结果中未找到期望匹配值 "${expectedVal}"`;
+                  }
+                } else {
+                  status = 'up';
+                }
+              } else {
+                status = 'down';
+                errorMsg = `DNS ${dnsType} 解析失败 (Status: ${dnsData ? dnsData.Status : 'Unknown'})`;
+              }
+            } else {
+              status = 'down';
+              errorMsg = `DoH HTTP 错误 ${dohRes.status}`;
+            }
+          } finally {
+            clearTimeout(timeoutId);
+          }
         } else if (site.type === 'domain') {
           domainExpiryDays = await checkDomainExpiry(site.domain);
           status = domainExpiryDays !== null && domainExpiryDays > 0 ? 'up' : 'down';

@@ -208,6 +208,7 @@
                 <option value="http">HTTP(S) 网站 / API</option>
                 <option value="icmp">ICMP PING 探针</option>
                 <option value="tcp">TCP 端口检测</option>
+                <option value="dns">DNS 记录检测</option>
                 <option value="push">Push 被动打卡</option>
               </select>
             </div>
@@ -220,8 +221,30 @@
               <input type="url" id="newSiteUrl" placeholder="https://example.com" oninput="onUrlOrHostInput()">
             </div>
             <div class="form-group" id="adminHostGroup" style="display: none;">
-              <label>目标 IP / Host</label>
+              <label id="adminHostLabel">目标 IP / Host</label>
               <input type="text" id="newSiteHost" placeholder="1.2.3.4 或 db.example.com">
+            </div>
+
+            <!-- DNS Monitoring Config Panel -->
+            <div id="adminDnsGroup" style="display: none; background: var(--bg-card-secondary); border: 1px solid var(--border-card); border-radius: 8px; padding: 0.85rem; margin-bottom: 1rem;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label style="font-size: 0.8rem; color: var(--text-secondary);">DNS 记录类型</label>
+                  <select id="newSiteDnsType">
+                    <option value="A">A (IPv4 地址)</option>
+                    <option value="AAAA">AAAA (IPv6 地址)</option>
+                    <option value="CNAME">CNAME (别名记录)</option>
+                    <option value="MX">MX (邮件服务器)</option>
+                    <option value="TXT">TXT (文本/SPF/DKIM)</option>
+                    <option value="NS">NS (域名服务器)</option>
+                    <option value="CAA">CAA (证书颁发授权)</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label style="font-size: 0.8rem; color: var(--text-secondary);">期望匹配响应值 (可选)</label>
+                  <input type="text" id="newSiteDnsExpected" placeholder="例如: 1.2.3.4 或 cname.domain.com (留空仅校验成功解析)">
+                </div>
+              </div>
             </div>
 
             <!-- Push Passive Heartbeat Panel -->

@@ -621,8 +621,25 @@ function resetPageForm() {
 function toggleAdminFormFields() {
   const type = document.getElementById('newSiteType').value;
   document.getElementById('adminUrlGroup').style.display = (type === 'http') ? 'block' : 'none';
-  document.getElementById('adminHostGroup').style.display = (type === 'icmp' || type === 'tcp') ? 'block' : 'none';
+  document.getElementById('adminHostGroup').style.display = (type === 'icmp' || type === 'tcp' || type === 'dns') ? 'block' : 'none';
   document.getElementById('expiryMonitorPanel').style.display = (type === 'http') ? 'block' : 'none';
+
+  const hostLabel = document.getElementById('adminHostLabel');
+  const hostInput = document.getElementById('newSiteHost');
+  if (hostLabel && hostInput) {
+    if (type === 'dns') {
+      hostLabel.textContent = '查询的目标域名 (Domain)';
+      hostInput.placeholder = '例如: example.com';
+    } else {
+      hostLabel.textContent = '目标 IP / Host';
+      hostInput.placeholder = '1.2.3.4 或 db.example.com';
+    }
+  }
+
+  const dnsGroup = document.getElementById('adminDnsGroup');
+  if (dnsGroup) {
+    dnsGroup.style.display = (type === 'dns') ? 'block' : 'none';
+  }
 
   const pushGroup = document.getElementById('adminPushGroup');
   if (pushGroup) {
@@ -806,10 +823,11 @@ function renderSitesTable(sites) {
     }
 
     const targetVal = site.url || site.host || site.domain || '-';
+    const typeBadgeText = site.type === 'dns' ? `DNS (${site.dnsType || 'A'})` : site.type.toUpperCase();
 
     tr.innerHTML = `
       <td style="white-space: nowrap;"><strong>${site.name}</strong></td>
-      <td style="white-space: nowrap;"><span class="badge badge-operational">${site.type.toUpperCase()}</span></td>
+      <td style="white-space: nowrap;"><span class="badge badge-operational">${typeBadgeText}</span></td>
       <td style="white-space: nowrap;"><div class="ellipsis-text" style="max-width: 220px;" title="${targetVal}">${targetVal}</div></td>
       <td style="white-space: nowrap; font-size: 1rem;">${itemIcons}</td>
       <td style="white-space: nowrap;"><span style="font-size: 0.8rem; color: var(--color-accent);">${channelsText}</span></td>
@@ -1047,6 +1065,13 @@ async function handleCreateSite(event) {
     pushUrlVal = pushInput && pushInput.value ? pushInput.value : `${window.location.origin}/api/push?token=${pushTokenVal}`;
   }
 
+  let dnsType = 'A';
+  let dnsExpected = '';
+  if (type === 'dns') {
+    dnsType = document.getElementById('newSiteDnsType')?.value || 'A';
+    dnsExpected = document.getElementById('newSiteDnsExpected')?.value.trim() || '';
+  }
+
   const checkDomain = document.getElementById('chkEnableDomainExpiry').checked;
   const checkSsl = document.getElementById('chkEnableSslExpiry').checked;
   const expiryFrequency = document.getElementById('expiryFrequency').value;
@@ -1065,6 +1090,7 @@ async function handleCreateSite(event) {
     domainWarnDays,
     sslWarnDays,
     alertChannels: selectedChannels,
+    ...(type === 'dns' && { dnsType, dnsExpected }),
     ...(type === 'push' ? { url: pushUrlVal, pushToken: pushTokenVal } : { ...(url && { url }), ...(host && { host }) }),
   };
 
