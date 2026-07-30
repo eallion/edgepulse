@@ -477,15 +477,6 @@ function renderPageGroupSitesBoxes(currentGroupSites = {}) {
   }).join('');
 
   container.innerHTML = filterBarHtml + cardsHtml;
-}ound" stroke-linejoin="round" style="vertical-align: -0.15em; margin-right: 0.3rem;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>${g}</span>
-          <button type="button" class="btn-secondary" style="padding: 0.15rem 0.4rem; font-size: 0.75rem; color: var(--color-red);" onclick="deletePageGroupSync('${g}')">删除分组</button>
-        </div>
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.5rem;">
-          ${siteCheckboxesHtml}
-        </div>
-      </div>
-    `;
-  }).join('');
 }
 
 async function addPageGroupSync() {
