@@ -57,15 +57,18 @@
 ├── admin.js                     # 后台控制逻辑与鉴权控制器
 ├── edgeone.json                 # EdgeOne Makers 平台配置文件
 ├── README.md                    # 项目使用与部署说明文档
-└── functions/
+└── functions/                           # [Edge Functions 边缘函数 (V8 引擎)] 极低延迟前台与数据查询
+│   └── api/
+│       ├── status.js                    # 状态查询与 24h 历史线图 API (支持多域名感知)
+│       ├── config.js                    # 系统配置读写 API
+│       ├── auth/
+│       │   ├── login.js                 # 管理员登录校验 API
+│       │   ├── passkey.js               # WebAuthn Passkey 免密 API
+│       │   └── change-password.js       # 密码修改 API
+│       └── push.js                      # VPS / 备份脚本被动心跳打卡 API
+└── cloud-functions/                     # [Cloud Functions 云函数 (Node.js 20.x 算力)] 物理套接字与后端引擎
     └── api/
-        ├── status.js            # [Edge Function] 状态查询与 24h 历史线图 API (支持多域名感知)
-        ├── cron.js              # [Edge Function] 核心心跳巡检与多渠道 Webhook 告警引擎
-        ├── auth/
-        │   ├── login.js         # [Edge Function] 管理员登录校验 API
-        │   └── change-password.js # [Edge Function] 密码修改 API
-        ├── push.js              # [Edge Function] VPS / 备份脚本被动心跳打卡 API
-        └── icmp-ping.js         # [Cloud Function] 屏蔽端口 VPS 的 ICMP Ping / TCP Port 探针
+        └── cron.js                      # 核心主动网络探针引擎 (net.Socket 原生 TCP 端口探针、DoH、SSL到期、多渠道告警)
 ```
 
 ---

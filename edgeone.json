@@ -5,8 +5,12 @@
   "framework": "static",
   "routes": [
     {
+      "src": "^/api/cron$",
+      "dest": "/cloud-functions/api/cron"
+    },
+    {
       "src": "^/api/(.*)$",
-      "dest": "/cloud-functions/api/$1"
+      "dest": "/functions/api/$1"
     },
     {
       "src": "^/admin/?$",
