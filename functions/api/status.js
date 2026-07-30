@@ -124,11 +124,13 @@ async function handleStatusRequest(context) {
     const resultSites = sites.map(site => {
       const snap = statusMap[site.id] || null;
       
-      let assignedGroup = '默认监视分组';
+      let assignedGroup = site.group || '默认监视分组';
       if (pageConfig.groupSites && Object.keys(pageConfig.groupSites).length > 0) {
+        let found = false;
         for (const [gName, sIds] of Object.entries(pageConfig.groupSites)) {
           if (Array.isArray(sIds) && sIds.includes(site.id)) {
             assignedGroup = gName;
+            found = true;
             break;
           }
         }

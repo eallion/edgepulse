@@ -1210,10 +1210,23 @@ async function handleCreateSite(event) {
 
   const selectedChannels = Array.from(document.querySelectorAll('input[name="alertChannel"]:checked')).map(el => el.value);
 
+  let selectedGroup = 'default';
+  const groupSelectEl = document.getElementById('newSiteGroupSelect');
+  const customGroupInputEl = document.getElementById('newSiteCustomGroupInput');
+
+  if (groupSelectEl) {
+    if (groupSelectEl.value === '__new__' && customGroupInputEl && customGroupInputEl.value.trim()) {
+      selectedGroup = customGroupInputEl.value.trim();
+    } else if (groupSelectEl.value && groupSelectEl.value !== '__new__') {
+      selectedGroup = groupSelectEl.value.trim();
+    }
+  }
+
   const newSite = {
     id: `site-${Date.now()}`,
     name,
     type,
+    group: selectedGroup,
     checkDomain,
     checkSsl,
     expiryFrequency,
@@ -1232,6 +1245,11 @@ async function handleCreateSite(event) {
         if (!page.siteIds.includes(newSite.id)) {
           page.siteIds.push(newSite.id);
         }
+      }
+      if (!page.groupSites) page.groupSites = {};
+      if (!page.groupSites[selectedGroup]) page.groupSites[selectedGroup] = [];
+      if (!page.groupSites[selectedGroup].includes(newSite.id)) {
+        page.groupSites[selectedGroup].push(newSite.id);
       }
     });
   }
