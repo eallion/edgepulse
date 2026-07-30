@@ -47,8 +47,15 @@ async function handleStatusRequest(context) {
       statusMap = (await kv.get('status:snapshot', 'json')) || {};
       
       const allSites = globalConfig?.sites || getMockSites();
-      if (pageConfig.siteIds && pageConfig.siteIds.length > 0) {
-        sites = allSites.filter(s => pageConfig.siteIds.includes(s.id));
+      const hasGroupFilter = pageConfig.groups && pageConfig.groups.length > 0;
+      const hasSiteFilter = pageConfig.siteIds && pageConfig.siteIds.length > 0;
+
+      if (hasGroupFilter || hasSiteFilter) {
+        sites = allSites.filter(s => {
+          const matchGroup = hasGroupFilter && pageConfig.groups.includes(s.group || 'default');
+          const matchSite = hasSiteFilter && pageConfig.siteIds.includes(s.id);
+          return matchGroup || matchSite;
+        });
       } else {
         sites = allSites;
       }
@@ -68,8 +75,15 @@ async function handleStatusRequest(context) {
       };
 
       const allSites = globalConfig.sites && globalConfig.sites.length > 0 ? globalConfig.sites : getMockSites();
-      if (pageConfig.siteIds && pageConfig.siteIds.length > 0) {
-        sites = allSites.filter(s => pageConfig.siteIds.includes(s.id));
+      const hasGroupFilter = pageConfig.groups && pageConfig.groups.length > 0;
+      const hasSiteFilter = pageConfig.siteIds && pageConfig.siteIds.length > 0;
+
+      if (hasGroupFilter || hasSiteFilter) {
+        sites = allSites.filter(s => {
+          const matchGroup = hasGroupFilter && pageConfig.groups.includes(s.group || 'default');
+          const matchSite = hasSiteFilter && pageConfig.siteIds.includes(s.id);
+          return matchGroup || matchSite;
+        });
       } else {
         sites = allSites;
       }

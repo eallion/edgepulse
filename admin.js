@@ -380,8 +380,40 @@ function switchTab(tabName) {
 
 /* Multi-Domain Custom Status Pages Controllers */
 function renderPagesTab() {
+  renderPageGroupsCheckboxes();
   renderPageSitesCheckboxes();
   renderPagesTable(cachedConfig.pages || []);
+}
+
+function renderPageGroupsCheckboxes(selectedGroups = []) {
+  const container = document.getElementById('pageGroupsCheckboxContainer');
+  if (!container) return;
+  const groups = cachedConfig.groups || ['default'];
+  if (groups.length === 0) {
+    container.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem;">暂无可用分组</span>';
+    return;
+  }
+
+  container.innerHTML = groups.map(g => {
+    const checked = selectedGroups.includes(g) ? 'checked' : '';
+    return `
+      <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; cursor: pointer; color: var(--text-primary);">
+        <input type="checkbox" class="page-group-checkbox" value="${g}" ${checked} onchange="onPageGroupCheckboxChange('${g}', this.checked)">
+        <span>📂 <strong>${g}</strong></span>
+      </label>
+    `;
+  }).join('');
+}
+
+function onPageGroupCheckboxChange(groupName, isChecked) {
+  const sites = cachedConfig.sites || [];
+  const groupSiteIds = sites.filter(s => s.group === groupName).map(s => s.id);
+  
+  document.querySelectorAll('.page-site-checkbox').forEach(cb => {
+    if (groupSiteIds.includes(cb.value)) {
+      cb.checked = isChecked;
+    }
+  });
 }
 
 function renderPageSitesCheckboxes(selectedSiteIds = []) {
@@ -410,7 +442,7 @@ function renderPagesTable(pages) {
   tbody.innerHTML = '';
 
   if (!pages || pages.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">暂无 Status 监控页，默认均展示全量监控项</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">暂无 Status 监控页，默认均展示全量监控项</td></tr>';
     return;
   }
 
@@ -418,6 +450,11 @@ function renderPagesTable(pages) {
 
   pages.forEach((page, idx) => {
     const tr = document.createElement('tr');
+
+    let groupsSummary = '<span style="color: var(--text-muted);">未限定分组</span>';
+    if (page.groups && page.groups.length > 0) {
+      groupsSummary = page.groups.map(g => `<span class="tag" style="background: rgba(246, 130, 31, 0.12); color: var(--color-accent); border: 1px solid var(--border-color); font-size: 0.75rem; padding: 0.1rem 0.4rem; border-radius: 4px; margin-right: 0.25rem; display: inline-block;">📂 ${g}</span>`).join('');
+    }
 
     let sitesSummary = '<span style="color: var(--text-muted);">包含全部监控项</span>';
     if (page.siteIds && page.siteIds.length > 0) {
@@ -431,7 +468,8 @@ function renderPagesTable(pages) {
     tr.innerHTML = `
       <td style="white-space: nowrap;"><strong>${page.domain || '-'}</strong></td>
       <td style="white-space: nowrap;">${page.name || '-'}</td>
-      <td style="white-space: nowrap;"><div class="ellipsis-text" style="max-width: 260px;" title="${page.siteIds ? page.siteIds.join(',') : ''}">${sitesSummary}</div></td>
+      <td style="white-space: nowrap;">${groupsSummary}</td>
+      <td style="white-space: nowrap;"><div class="ellipsis-text" style="max-width: 220px;" title="${page.siteIds ? page.siteIds.join(',') : ''}">${sitesSummary}</div></td>
       <td style="white-space: nowrap;">${page.title || '<span style="color: var(--text-muted);">(继承全局)</span>'}</td>
       <td style="white-space: nowrap;">
         <button class="btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; margin-right: 0.3rem;" onclick="editCustomPage(${idx})">编辑</button>
@@ -454,6 +492,7 @@ async function handleSaveCustomPage() {
     return;
   }
 
+  const selectedGroups = Array.from(document.querySelectorAll('.page-group-checkbox:checked')).map(cb => cb.value);
   const selectedSiteIds = Array.from(document.querySelectorAll('.page-site-checkbox:checked')).map(cb => cb.value);
 
   if (!cachedConfig.pages) cachedConfig.pages = [];
@@ -467,6 +506,7 @@ async function handleSaveCustomPage() {
         name: name || domain,
         title,
         announcement,
+        groups: selectedGroups,
         siteIds: selectedSiteIds,
       };
     }
@@ -477,6 +517,7 @@ async function handleSaveCustomPage() {
       name: name || domain,
       title,
       announcement,
+      groups: selectedGroups,
       siteIds: selectedSiteIds,
     };
     cachedConfig.pages.push(newPage);
@@ -501,6 +542,7 @@ function editCustomPage(index) {
   document.getElementById('pageAnnouncementInput').value = page.announcement || '';
   document.getElementById('cancelEditPageBtn').style.display = 'inline-block';
 
+  renderPageGroupsCheckboxes(page.groups || []);
   renderPageSitesCheckboxes(page.siteIds || []);
 }
 
@@ -529,6 +571,7 @@ function resetPageForm() {
   document.getElementById('pageTitleConfigInput').value = '';
   document.getElementById('pageAnnouncementInput').value = '';
   document.getElementById('cancelEditPageBtn').style.display = 'none';
+  renderPageGroupsCheckboxes([]);
   renderPageSitesCheckboxes([]);
 }
 
