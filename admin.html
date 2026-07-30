@@ -258,14 +258,12 @@
             <!-- Push Passive Heartbeat Panel -->
             <div class="form-group" id="adminPushGroup" style="display: none;">
               <label>专属打卡 API 链接</label>
-              <div style="display: flex; gap: 0.4rem; margin-top: 0.3rem; position: relative; align-items: center;">
-                <input type="text" id="newSitePushUrl" readonly style="flex: 1; font-family: monospace; font-size: 0.85rem; font-weight: 600; padding-right: 2.8rem; background: var(--bg-card-secondary); color: var(--color-accent);" value="">
-                <button type="button" class="btn-secondary" onclick="copyNewSitePushUrl()" style="position: absolute; right: 4px; top: 50%; transform: translateY(-50%); padding: 0.3rem 0.5rem; height: 30px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px;" title="复制打卡链接">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <div style="display: flex; gap: 0.5rem; margin-top: 0.3rem; align-items: center;">
+                <input type="text" id="newSitePushUrl" readonly style="flex: 1; font-family: monospace; font-size: 0.85rem; font-weight: 600; background: var(--bg-card-secondary); color: var(--color-accent); height: 38px;" value="">
+                <button type="button" class="btn-secondary" onclick="copyNewSitePushUrl()" style="height: 38px; padding: 0 0.8rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.3rem; font-size: 0.82rem; white-space: nowrap;" title="复制打卡链接">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>复制链接
                 </button>
-              </div>
-              <div style="display: flex; justify-content: flex-end; margin-top: 0.4rem;">
-                <button type="button" class="btn-secondary" onclick="generateOrRefreshNewSitePushUrl(true)" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.3rem;">
+                <button type="button" class="btn-secondary" onclick="generateOrRefreshNewSitePushUrl(true)" style="height: 38px; padding: 0 0.8rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.3rem; font-size: 0.82rem; white-space: nowrap;" title="重新生成 Token">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/></svg>重新生成 Token
                 </button>
               </div>
