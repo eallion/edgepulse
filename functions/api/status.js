@@ -46,9 +46,12 @@ async function handleStatusRequest(context) {
 
       statusMap = (await kv.get('status:snapshot', 'json')) || {};
       
-      const allSites = globalConfig?.sites || getMockSites();
-      if (pageConfig.siteIds && pageConfig.siteIds.length > 0) {
+      const allSites = globalConfig?.sites || [];
+      if (pageConfig.siteIds && Array.isArray(pageConfig.siteIds) && pageConfig.siteIds.length > 0) {
         sites = allSites.filter(s => pageConfig.siteIds.includes(s.id));
+        if (sites.length === 0) {
+          sites = allSites;
+        }
       } else {
         sites = allSites;
       }
@@ -56,7 +59,7 @@ async function handleStatusRequest(context) {
       // Dev server fallback: read from globalThis singleton
       globalConfig = globalThis.__EDGEPULSE_CONFIG__ || {
         title: 'EdgePulse Status',
-        sites: getMockSites(),
+        sites: [],
       };
 
       const matchedPage = (globalConfig.pages || []).find(p => {
@@ -73,9 +76,12 @@ async function handleStatusRequest(context) {
         announcement: globalConfig.announcement || '',
       };
 
-      const allSites = globalConfig.sites && globalConfig.sites.length > 0 ? globalConfig.sites : getMockSites();
-      if (pageConfig.siteIds && pageConfig.siteIds.length > 0) {
+      const allSites = globalConfig.sites && globalConfig.sites.length > 0 ? globalConfig.sites : [];
+      if (pageConfig.siteIds && Array.isArray(pageConfig.siteIds) && pageConfig.siteIds.length > 0) {
         sites = allSites.filter(s => pageConfig.siteIds.includes(s.id));
+        if (sites.length === 0) {
+          sites = allSites;
+        }
       } else {
         sites = allSites;
       }

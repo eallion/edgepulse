@@ -392,7 +392,9 @@ function switchTab(tabName) {
     if (el) el.classList.toggle('active', tabs[idx] === tabName);
   });
 
-  if (tabName === 'pages') {
+  if (tabName === 'sites') {
+    renderSitesTable(cachedConfig.sites || []);
+  } else if (tabName === 'pages') {
     renderPagesTab();
   }
 }
@@ -630,13 +632,18 @@ async function handleSaveCustomPage() {
 
   if (!cachedConfig.pages) cachedConfig.pages = [];
 
+  const selectedSiteList = Array.from(allSelectedSiteIds);
+  const totalSitesCount = (cachedConfig.sites || []).length;
+  const isAllSitesSelected = totalSitesCount === 0 || selectedSiteList.length >= totalSitesCount;
+  const cleanDomain = domain.replace(/\s*\([^)]*\)/g, '').trim();
+
   const pageData = {
-    domain,
-    name: name || (isEditingDefault ? '全局默认 Status 页' : domain),
+    domain: cleanDomain,
+    name: name || (isEditingDefault ? '全局默认 Status 页' : cleanDomain),
     title,
     announcement,
     groupSites: groupSitesMap,
-    siteIds: Array.from(allSelectedSiteIds),
+    siteIds: isAllSitesSelected ? null : selectedSiteList,
   };
 
   if (editingId) {
@@ -1217,6 +1224,17 @@ async function handleCreateSite(event) {
     ...(type === 'tcp' && { port }),
     ...(type === 'push' ? { url: pushUrlVal, pushToken: pushTokenVal } : { ...(url && { url }), ...(finalHost && { host: finalHost }) }),
   };
+
+  // Automatically attach newSite.id to existing pages if siteIds array is configured
+  if (cachedConfig.pages && Array.isArray(cachedConfig.pages)) {
+    cachedConfig.pages.forEach(page => {
+      if (page.siteIds && Array.isArray(page.siteIds)) {
+        if (!page.siteIds.includes(newSite.id)) {
+          page.siteIds.push(newSite.id);
+        }
+      }
+    });
+  }
 
   const updatedConfig = {
     ...cachedConfig,
