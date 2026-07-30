@@ -87,6 +87,33 @@
 
 ---
 
+## 📡 Push 被动心跳打卡模式指南 (Push / Dead Man's Snitch)
+
+**Push 模式** 是一种“反向报平安”的监控机制。非常适合用于 **无公网 IP 设备**（如家里的 NAS、软路由）、**全防火墙拦截阻断端口的主机**，以及 **Cron 定时备份脚本**。
+
+### 1. 运行原理
+在 EdgePulse 控制台添加类型为 `Push 被动打卡` 的监控节点，系统会自动生成唯一的专属打卡 URL（如 `https://your-domain.com/api/push?token=pulse_xxxxxx`）。目标设备按周期请求该 URL 打卡。若在设定时间内未收到打卡信号，系统将自动触发断网/失联告警。
+
+### 2. 使用方法示范
+
+- **Linux Crontab 定时打卡（如每 5 分钟打卡一次）**：
+  ```bash
+  */5 * * * * curl -s "https://your-domain.com/api/push?token=pulse_xxxxxx" > /dev/null
+  ```
+- **Shell 备份脚本成功后打卡**：
+  ```bash
+  #!/bin/bash
+  # 运行数据库备份
+  mysqldump -u root -p'password' my_db > backup.sql
+
+  # 备份成功后发起打卡
+  if [ $? -eq 0 ]; then
+    curl -s "https://your-domain.com/api/push?token=pulse_xxxxxx"
+  fi
+  ```
+
+---
+
 ## 📡 API 接口一览
 
 - **`GET /api/status`**：拉取当前状态页所有节点的实时快照、SLA %、24h 延时线图及 SSL/域名剩余天数（自动感知 `Host` 域名多租户展示）。

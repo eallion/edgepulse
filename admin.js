@@ -623,7 +623,47 @@ function toggleAdminFormFields() {
   document.getElementById('adminUrlGroup').style.display = (type === 'http') ? 'block' : 'none';
   document.getElementById('adminHostGroup').style.display = (type === 'icmp' || type === 'tcp') ? 'block' : 'none';
   document.getElementById('expiryMonitorPanel').style.display = (type === 'http') ? 'block' : 'none';
+
+  const pushGroup = document.getElementById('adminPushGroup');
+  if (pushGroup) {
+    if (type === 'push') {
+      pushGroup.style.display = 'block';
+      generateOrRefreshNewSitePushUrl();
+    } else {
+      pushGroup.style.display = 'none';
+    }
+  }
+
   onUrlOrHostInput();
+}
+
+function generateOrRefreshNewSitePushUrl() {
+  const input = document.getElementById('newSitePushUrl');
+  const codeHint = document.getElementById('pushUrlCodeHint');
+  if (!input) return;
+
+  if (!input.value) {
+    const token = 'pulse_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 6);
+    const pushUrl = `${window.location.origin}/api/push?token=${token}`;
+    input.value = pushUrl;
+    input.setAttribute('data-token', token);
+  }
+  if (codeHint) codeHint.textContent = input.value;
+}
+
+function copyNewSitePushUrl() {
+  const input = document.getElementById('newSitePushUrl');
+  if (!input || !input.value) return;
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(input.value).then(() => {
+      showToast('Push 打卡链接已成功复制到剪贴板', 'success', '复制成功');
+    }).catch(() => {
+      showToast('复制失败，请手动选择复制', 'error', '复制失败');
+    });
+  } else {
+    showToast('Push 打卡链接：' + input.value, 'info', '打卡链接');
+  }
 }
 
 function isRootDomain(hostname) {
@@ -985,19 +1025,12 @@ async function handleCreateSite(event) {
   const url = document.getElementById('newSiteUrl').value;
   const host = document.getElementById('newSiteHost').value;
   
-  const selectEl = document.getElementById('newSiteGroupSelect');
-  const customGroupInputEl = document.getElementById('newSiteCustomGroupInput');
-
-  let finalGroup = 'default';
-  if (selectEl.value === '__new__') {
-    const customVal = customGroupInputEl ? customGroupInputEl.value.trim() : '';
-    if (!customVal) {
-      showToast('请输入新建分组名称', 'warning');
-      return;
-    }
-    finalGroup = customVal;
-  } else {
-    finalGroup = selectEl.value;
+  let pushUrlVal = '';
+  let pushTokenVal = '';
+  if (type === 'push') {
+    const pushInput = document.getElementById('newSitePushUrl');
+    pushTokenVal = pushInput ? (pushInput.getAttribute('data-token') || 'pulse_' + Date.now()) : ('pulse_' + Date.now());
+    pushUrlVal = pushInput && pushInput.value ? pushInput.value : `${window.location.origin}/api/push?token=${pushTokenVal}`;
   }
 
   const checkDomain = document.getElementById('chkEnableDomainExpiry').checked;
@@ -1018,8 +1051,7 @@ async function handleCreateSite(event) {
     domainWarnDays,
     sslWarnDays,
     alertChannels: selectedChannels,
-    ...(url && { url }),
-    ...(host && { host }),
+    ...(type === 'push' ? { url: pushUrlVal, pushToken: pushTokenVal } : { ...(url && { url }), ...(host && { host }) }),
   };
 
   const updatedConfig = {
@@ -1027,10 +1059,13 @@ async function handleCreateSite(event) {
     sites: [...(cachedConfig.sites || []), newSite],
   };
 
-  await saveConfig(updatedConfig, token, `监控节点添加成功，并成功关联分组 [${finalGroup}]！`);
-  
-  if (customGroupInputEl) customGroupInputEl.value = '';
-  if (selectEl) selectEl.value = finalGroup;
+  await saveConfig(updatedConfig, token, `监控节点【${name}】添加成功！`);
+
+  const pushInput = document.getElementById('newSitePushUrl');
+  if (pushInput) {
+    pushInput.value = '';
+    pushInput.removeAttribute('data-token');
+  }
   
   switchTab('sites');
 }
