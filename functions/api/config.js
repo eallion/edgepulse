@@ -123,21 +123,23 @@ async function handleConfig(context) {
         ...body,
       };
 
-      const authData = {
-        username: globalThis.__EDGEPULSE_AUTH_CONFIG__?.username || 'admin',
-        password: globalThis.__EDGEPULSE_AUTH_CONFIG__?.password || 'admin',
-        totpEnabled: !!body.totpEnabled,
-        totpSecret: body.totpSecret || '',
-        turnstileEnabled: !!body.turnstileEnabled,
-        turnstileSiteKey: body.turnstileSiteKey || '',
-        turnstileSecretKey: body.turnstileSecretKey || '',
-      };
-
-      globalThis.__EDGEPULSE_AUTH_CONFIG__ = authData;
-
       if (kv) {
         await kv.put('config', JSON.stringify(globalThis.__EDGEPULSE_CONFIG__));
-        await kv.put('config:auth', JSON.stringify(authData));
+
+        // Only update 2FA/Turnstile in config:auth if explicitly passed, NEVER reset username/password!
+        if (body.totpEnabled !== undefined || body.turnstileEnabled !== undefined) {
+          let currentAuth = (await kv.get('config:auth', 'json')) || globalThis.__EDGEPULSE_AUTH_CONFIG__ || { username: 'admin', password: 'admin' };
+          const updatedAuth = {
+            ...currentAuth,
+            totpEnabled: !!body.totpEnabled,
+            totpSecret: body.totpSecret !== undefined ? body.totpSecret : (currentAuth.totpSecret || ''),
+            turnstileEnabled: !!body.turnstileEnabled,
+            turnstileSiteKey: body.turnstileSiteKey !== undefined ? body.turnstileSiteKey : (currentAuth.turnstileSiteKey || ''),
+            turnstileSecretKey: body.turnstileSecretKey !== undefined ? body.turnstileSecretKey : (currentAuth.turnstileSecretKey || ''),
+          };
+          globalThis.__EDGEPULSE_AUTH_CONFIG__ = updatedAuth;
+          await kv.put('config:auth', JSON.stringify(updatedAuth));
+        }
         if (body.pages && Array.isArray(body.pages)) {
           for (const page of body.pages) {
             if (page.id) {
