@@ -892,11 +892,92 @@ function renderSitesTable(sites) {
       <td style="white-space: nowrap; font-size: 1rem;">${itemIcons}</td>
       <td style="white-space: nowrap;"><span style="font-size: 0.8rem; color: var(--color-accent);">${channelsText}</span></td>
       <td style="white-space: nowrap;">
+        <button class="btn-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.8rem; color: var(--color-accent); margin-right: 0.3rem; white-space: nowrap;" onclick="editSite(${index})">编辑</button>
         <button class="btn-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.8rem; color: var(--color-red); white-space: nowrap;" onclick="deleteSite(${index})">删除</button>
       </td>
     `;
     tbody.appendChild(tr);
   });
+}
+
+let editingSiteId = null;
+
+function editSite(index) {
+  const site = cachedConfig.sites[index];
+  if (!site) return;
+
+  editingSiteId = site.id;
+
+  safeSetValue('newSiteType', site.type || 'http');
+  toggleAdminFormFields();
+
+  safeSetValue('newSiteName', site.name || '');
+  safeSetValue('newSiteUrl', site.url || '');
+  safeSetValue('newSiteHost', site.host || '');
+  safeSetValue('newSitePort', site.port || '');
+
+  if (site.type === 'dns') {
+    safeSetValue('newSiteDnsType', site.dnsType || 'A');
+    safeSetValue('newSiteDnsExpected', site.dnsExpected || '');
+  }
+
+  if (site.type === 'push') {
+    const pushInput = document.getElementById('newSitePushUrl');
+    if (pushInput) {
+      pushInput.value = site.url || '';
+      pushInput.setAttribute('data-token', site.pushToken || '');
+    }
+  }
+
+  const chkDomain = document.getElementById('chkEnableDomainExpiry');
+  if (chkDomain) chkDomain.checked = site.checkDomain ?? site.enableDomainExpiry ?? false;
+
+  const chkSsl = document.getElementById('chkEnableSslExpiry');
+  if (chkSsl) chkSsl.checked = site.checkSsl ?? site.enableSslExpiry ?? true;
+
+  safeSetValue('expiryFrequency', site.expiryFrequency || 'daily');
+  safeSetValue('domainWarnDays', site.domainWarnDays || 30);
+  safeSetValue('sslWarnDays', site.sslWarnDays || 30);
+
+  const alertChannels = site.alertChannels || [];
+  document.querySelectorAll('input[name="alertChannel"]').forEach(cb => {
+    cb.checked = alertChannels.includes(cb.value);
+  });
+
+  const titleEl = document.getElementById('addSiteTitle');
+  if (titleEl) titleEl.textContent = `✏️ 编辑监控节点 (${site.name})`;
+
+  const saveBtn = document.getElementById('saveSiteBtn');
+  if (saveBtn) saveBtn.textContent = '保存修改';
+
+  const cancelBtn = document.getElementById('cancelEditSiteBtn');
+  if (cancelBtn) cancelBtn.style.display = 'inline-block';
+
+  switchTab('addSite');
+}
+
+function resetSiteForm() {
+  editingSiteId = null;
+
+  const form = document.querySelector('#tab-addSite form');
+  if (form) form.reset();
+
+  const titleEl = document.getElementById('addSiteTitle');
+  if (titleEl) titleEl.textContent = '添加监控节点';
+
+  const saveBtn = document.getElementById('saveSiteBtn');
+  if (saveBtn) saveBtn.textContent = '确认添加节点';
+
+  const cancelBtn = document.getElementById('cancelEditSiteBtn');
+  if (cancelBtn) cancelBtn.style.display = 'none';
+
+  const pushInput = document.getElementById('newSitePushUrl');
+  if (pushInput) {
+    pushInput.value = '';
+    pushInput.removeAttribute('data-token');
+  }
+
+  toggleAdminFormFields();
 }
 
 function getChannelLabel(key) {
@@ -1149,8 +1230,10 @@ async function handleCreateSite(event) {
 
   const selectedChannels = Array.from(document.querySelectorAll('input[name="alertChannel"]:checked')).map(el => el.value);
 
-  const newSite = {
-    id: `site-${Date.now()}`,
+  const siteId = editingSiteId || `site-${Date.now()}`;
+
+  const targetSiteObj = {
+    id: siteId,
     name,
     type,
     checkDomain,
@@ -1164,19 +1247,22 @@ async function handleCreateSite(event) {
     ...(type === 'push' ? { url: pushUrlVal, pushToken: pushTokenVal } : { ...(url && { url }), ...(finalHost && { host: finalHost }) }),
   };
 
+  let updatedSites = [];
+  if (editingSiteId) {
+    updatedSites = (cachedConfig.sites || []).map(s => s.id === editingSiteId ? targetSiteObj : s);
+  } else {
+    updatedSites = [...(cachedConfig.sites || []), targetSiteObj];
+  }
+
   const updatedConfig = {
     ...cachedConfig,
-    sites: [...(cachedConfig.sites || []), newSite],
+    sites: updatedSites,
   };
 
-  await saveConfig(updatedConfig, token, `监控节点【${name}】添加成功！`);
+  const isEdit = !!editingSiteId;
+  await saveConfig(updatedConfig, token, `监控节点【${name}】${isEdit ? '修改' : '添加'}成功！`);
 
-  const pushInput = document.getElementById('newSitePushUrl');
-  if (pushInput) {
-    pushInput.value = '';
-    pushInput.removeAttribute('data-token');
-  }
-  
+  resetSiteForm();
   switchTab('sites');
 }
 
