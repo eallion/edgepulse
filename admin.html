@@ -363,16 +363,16 @@
         <div id="tab-pages" style="display: none;">
           <div style="background: var(--bg-card); border: 1px solid var(--border-card); border-radius: 10px; padding: 1.25rem; margin-bottom: 1.5rem;">
             <h3 style="margin-top: 0; margin-bottom: 0.4rem;" id="pageEditorTitle"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -0.15em; margin-right: 0.3rem;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>添加 Status 监控页</h3>
-            <span class="sub-hint" style="display: block; margin-bottom: 1rem;">按 Status 域名添加独立监控页，并为其划分分组与归属节点。</span>
+            <span class="sub-hint" style="display: block; margin-bottom: 1rem;">默认以当前域名作为全局默认 Status 监控页。如有需求，可在此添加额外特定子域名的 Status 监控页。</span>
             <input type="hidden" id="pageEditingId" value="">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
               <div class="form-group">
                 <label>Status 域名</label>
-                <input type="text" id="pageDomainInput" placeholder="例如: status.a.com">
+                <input type="text" id="pageDomainInput" placeholder="额外子域名例如: status.a.com">
               </div>
               <div class="form-group">
                 <label>页面名称</label>
-                <input type="text" id="pageNameInput" placeholder="例如: 官方主站监控页">
+                <input type="text" id="pageNameInput" placeholder="例如: 核心网关监控页">
               </div>
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">

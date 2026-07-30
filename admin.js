@@ -400,7 +400,7 @@ function switchTab(tabName) {
 /* Multi-Domain Custom Status Pages Controllers */
 function renderPagesTab() {
   renderPageGroupSitesBoxes();
-  renderPagesTable(cachedConfig.pages || []);
+  renderPagesTable();
 }
 
 function filterPageSitesByType(typeFilter, btnEl) {
@@ -529,19 +529,38 @@ function getCurrentPageFormGroupSites() {
   return currentMap;
 }
 
-function renderPagesTable(pages) {
+function getAllPagesWithDefault() {
+  const userPages = cachedConfig.pages || [];
+  const hasCustomDefault = userPages.some(p => p.id === 'default' || p.isDefault);
+
+  if (hasCustomDefault) {
+    return userPages;
+  }
+
+  const currentHost = window.location.hostname || 'localhost';
+  const defaultPage = {
+    id: 'default',
+    isDefault: true,
+    domain: `${currentHost} (当前主站)`,
+    name: '全局默认 Status 页',
+    title: cachedConfig.title || 'EdgePulse Status',
+    announcement: cachedConfig.announcement || '',
+    siteIds: null,
+    groupSites: null
+  };
+
+  return [defaultPage, ...userPages];
+}
+
+function renderPagesTable() {
   const tbody = document.getElementById('pagesTableBody');
   if (!tbody) return;
   tbody.innerHTML = '';
 
-  if (!pages || pages.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">暂无 Status 监控页，默认均展示全量监控项</td></tr>';
-    return;
-  }
-
+  const displayPages = getAllPagesWithDefault();
   const allSites = cachedConfig.sites || [];
 
-  pages.forEach((page, idx) => {
+  displayPages.forEach((page) => {
     const tr = document.createElement('tr');
 
     let groupsSummary = '<span style="color: var(--text-muted);">全部分组</span>';
@@ -560,29 +579,40 @@ function renderPagesTable(pages) {
       sitesSummary = `<span style="color: var(--color-accent); font-weight: 500;">${matchedNames.join(', ')}</span> <small style="color: var(--text-muted);">(${page.siteIds.length} 项)</small>`;
     }
 
+    const domainDisplay = page.isDefault 
+      ? `<strong>${page.domain || window.location.hostname}</strong> <span class="badge" style="background: rgba(34, 197, 94, 0.15); color: var(--color-green); font-size: 0.7rem; margin-left: 0.35rem; font-weight: normal;">系统默认</span>`
+      : `<strong>${page.domain || '-'}</strong>`;
+
+    const actionButtons = page.isDefault
+      ? `<button class="btn-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.8rem; margin-right: 0.3rem;" onclick="editCustomPageById('${page.id}')">编辑</button><span style="color: var(--text-muted); font-size: 0.8rem;" title="默认主页不可删除">默认</span>`
+      : `<button class="btn-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.8rem; margin-right: 0.3rem;" onclick="editCustomPageById('${page.id}')">编辑</button><button class="btn-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.8rem; color: var(--color-red);" onclick="deleteCustomPageById('${page.id}')">删除</button>`;
+
     tr.innerHTML = `
-      <td style="white-space: nowrap;"><strong>${page.domain || '-'}</strong></td>
+      <td style="white-space: nowrap;">${domainDisplay}</td>
       <td style="white-space: nowrap;">${page.name || '-'}</td>
       <td style="white-space: nowrap;">${groupsSummary}</td>
       <td style="white-space: nowrap;"><div class="ellipsis-text" style="max-width: 220px;" title="${page.siteIds ? page.siteIds.join(',') : ''}">${sitesSummary}</div></td>
       <td style="white-space: nowrap;">${page.title || '<span style="color: var(--text-muted);">(继承全局)</span>'}</td>
-      <td style="white-space: nowrap;">
-        <button class="btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; margin-right: 0.3rem;" onclick="editCustomPage(${idx})">编辑</button>
-        <button class="btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; color: var(--color-red);" onclick="deleteCustomPage(${idx})">删除</button>
-      </td>
+      <td style="white-space: nowrap;">${actionButtons}</td>
     `;
     tbody.appendChild(tr);
   });
 }
 
 async function handleSaveCustomPage() {
-  const domain = document.getElementById('pageDomainInput').value.trim();
+  const editingId = document.getElementById('pageEditingId').value;
+  const isEditingDefault = editingId === 'default';
+
+  let domain = document.getElementById('pageDomainInput').value.trim();
+  if (isEditingDefault) {
+    domain = window.location.hostname || 'default';
+  }
+
   const name = document.getElementById('pageNameInput').value.trim();
   const title = document.getElementById('pageTitleConfigInput').value.trim();
   const announcement = document.getElementById('pageAnnouncementInput').value.trim();
-  const editingId = document.getElementById('pageEditingId').value;
 
-  if (!domain) {
+  if (!domain && !isEditingDefault) {
     showToast('请输入 Status 域名', 'error', '表单验证失败');
     return;
   }
@@ -602,7 +632,7 @@ async function handleSaveCustomPage() {
 
   const pageData = {
     domain,
-    name: name || domain,
+    name: name || (isEditingDefault ? '全局默认 Status 页' : domain),
     title,
     announcement,
     groupSites: groupSitesMap,
@@ -616,6 +646,12 @@ async function handleSaveCustomPage() {
         ...cachedConfig.pages[index],
         ...pageData
       };
+    } else {
+      cachedConfig.pages.push({
+        id: editingId,
+        isDefault: isEditingDefault,
+        ...pageData
+      });
     }
   } else {
     cachedConfig.pages.push({
@@ -624,20 +660,30 @@ async function handleSaveCustomPage() {
     });
   }
 
-  const token = localStorage.getItem('edgepulse_admin_token') || 'dev_authenticated_token';
+  const token = sessionStorage.getItem('edgepulse_token') || 'dev_authenticated_token';
   await saveConfig(cachedConfig, token, 'Status 监控页保存成功！');
   resetPageForm();
   renderPagesTab();
 }
 
-function editCustomPage(index) {
-  const pages = cachedConfig.pages || [];
-  const page = pages[index];
+function editCustomPageById(id) {
+  const displayPages = getAllPagesWithDefault();
+  const page = displayPages.find(p => p.id === id);
   if (!page) return;
 
-  document.getElementById('pageEditorTitle').innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -0.15em; margin-right: 0.3rem;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>编辑 Status 监控页';
+  const isDefault = page.isDefault || page.id === 'default';
+
+  document.getElementById('pageEditorTitle').innerHTML = isDefault
+    ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -0.15em; margin-right: 0.3rem;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>✏️ 编辑默认 Status 监控页 (当前主站)'
+    : '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -0.15em; margin-right: 0.3rem;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>编辑 Status 监控页';
+
   document.getElementById('pageEditingId').value = page.id;
-  document.getElementById('pageDomainInput').value = page.domain || '';
+  const domainInput = document.getElementById('pageDomainInput');
+  if (domainInput) {
+    domainInput.value = isDefault ? (window.location.hostname || '当前主站域名') : (page.domain || '');
+    domainInput.disabled = isDefault;
+  }
+
   document.getElementById('pageNameInput').value = page.name || '';
   document.getElementById('pageTitleConfigInput').value = page.title || '';
   document.getElementById('pageAnnouncementInput').value = page.announcement || '';
@@ -646,15 +692,17 @@ function editCustomPage(index) {
   renderPageGroupSitesBoxes(page.groupSites || {});
 }
 
-function deleteCustomPage(index) {
-  showKumoConfirm({
-    title: '确认删除 Status 监控页',
-    message: '删除后该域名访问时将自动使用全量监控项，是否确定删除？',
-    confirmText: '确认删除',
-    onConfirm: async () => {
-      if (cachedConfig.pages && cachedConfig.pages[index]) {
-        cachedConfig.pages.splice(index, 1);
-        const token = localStorage.getItem('edgepulse_admin_token') || 'dev_authenticated_token';
+function deleteCustomPageById(id) {
+  if (id === 'default') {
+    showToast('默认 Status 监控页不可删除', 'warning');
+    return;
+  }
+
+  showConfirm('确认删除 Status 监控页', '删除后该自定义域名将自动使用全局默认 Status 页，是否确定删除？').then(async (confirmed) => {
+    if (confirmed) {
+      if (cachedConfig.pages) {
+        cachedConfig.pages = cachedConfig.pages.filter(p => p.id !== id);
+        const token = sessionStorage.getItem('edgepulse_token') || 'dev_authenticated_token';
         await saveConfig(cachedConfig, token, 'Status 监控页已成功删除！');
         resetPageForm();
         renderPagesTab();
@@ -666,11 +714,16 @@ function deleteCustomPage(index) {
 function resetPageForm() {
   document.getElementById('pageEditorTitle').innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -0.15em; margin-right: 0.3rem;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>添加 Status 监控页';
   document.getElementById('pageEditingId').value = '';
-  document.getElementById('pageDomainInput').value = '';
+  const domainInput = document.getElementById('pageDomainInput');
+  if (domainInput) {
+    domainInput.value = '';
+    domainInput.disabled = false;
+  }
   document.getElementById('pageNameInput').value = '';
   document.getElementById('pageTitleConfigInput').value = '';
   document.getElementById('pageAnnouncementInput').value = '';
   document.getElementById('cancelEditPageBtn').style.display = 'none';
+
   renderPageGroupSitesBoxes({});
 }
 
