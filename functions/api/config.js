@@ -7,7 +7,7 @@
 if (!globalThis.__EDGEPULSE_CONFIG__) {
   globalThis.__EDGEPULSE_CONFIG__ = {
     title: 'EdgePulse Status',
-    favicon: '/public/images/logo.png',
+    favicon: '/public/images/logo.svg',
     icp: '',
     sites: [],
     alerts: {},
