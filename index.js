@@ -98,7 +98,13 @@ function renderPage(data) {
 
   if (data.logo) {
     const logoEl = document.getElementById('appLogo');
-    if (logoEl) logoEl.textContent = data.logo;
+    if (logoEl) {
+      if (logoEl.tagName === 'IMG') {
+        logoEl.src = data.logo;
+      } else {
+        logoEl.textContent = data.logo;
+      }
+    }
   }
   
   if (data.announcement) {
