@@ -107,9 +107,15 @@ function renderPage(data) {
     }
   }
   
-  if (data.announcement) {
+  if (data.announcement && data.announcement.trim()) {
     const annEl = document.getElementById('appAnnouncement');
-    if (annEl) annEl.textContent = data.announcement;
+    if (annEl) {
+      annEl.textContent = data.announcement.trim();
+      annEl.style.display = 'block';
+    }
+  } else {
+    const annEl = document.getElementById('appAnnouncement');
+    if (annEl) annEl.style.display = 'none';
   }
 
   // Update ICP License in Footer
@@ -142,7 +148,8 @@ function renderPage(data) {
 
   // Update Summary Metrics
   const sites = data.sites || [];
-  document.getElementById('totalSitesCount').textContent = sites.length;
+  const totalSitesEl = document.getElementById('totalSitesCount');
+  if (totalSitesEl) totalSitesEl.textContent = sites.length;
 
   const validLatencies = sites.map(s => s.latency).filter(l => typeof l === 'number' && l > 0);
   const avgLatency = validLatencies.length > 0 ? Math.round(validLatencies.reduce((a, b) => a + b, 0) / validLatencies.length) : 0;
@@ -187,42 +194,16 @@ function renderPage(data) {
   });
 }
 
-function generateSparklineSvg(history) {
-  if (!history || history.length < 2) {
-    history = [28, 30, 26, 32, 29, 31, 27, 30];
-  }
-  const max = Math.max(...history, 50);
-  const min = Math.min(...history, 0);
-  const range = max - min || 1;
-  const width = 70;
-  const height = 20;
 
-  const points = history.map((val, idx) => {
-    const x = (idx / (history.length - 1)) * width;
-    const y = height - ((val - min) / range) * (height - 4) - 2;
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
-  }).join(' ');
-
-  return `
-    <svg class="sparkline-svg" viewBox="0 0 ${width} ${height}">
-      <polyline
-        fill="none"
-        stroke="var(--color-accent)"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        points="${points}"
-      />
-    </svg>
-  `;
-}
 
 function createServiceCard(site, historyDays = 30) {
   const card = document.createElement('div');
   card.className = 'service-card';
 
-  const isUp = site.status === 'up';
-  const isDegraded = site.status === 'degraded';
+  const statusStr = (site.status || 'operational').toLowerCase();
+  const isUp = statusStr === 'operational' || statusStr === 'up';
+  const isDegraded = statusStr === 'degraded';
+  
   const badgeClass = isUp ? 'badge-operational' : (isDegraded ? 'badge-degraded' : 'badge-down');
   const badgeText = isUp ? '正常' : (isDegraded ? '延迟高' : '故障');
 
@@ -262,8 +243,6 @@ function createServiceCard(site, historyDays = 30) {
     barsHtml += `<div class="uptime-bar-pill ${pillClass}" title="${dateLabel}${statusLabel} (${dayItem.uptimePct ?? 100}%)"></div>`;
   }
 
-  const sparklineHtml = generateSparklineSvg(site.history24h);
-
   card.innerHTML = `
     <div class="service-header">
       <div class="service-name">
@@ -271,18 +250,14 @@ function createServiceCard(site, historyDays = 30) {
         ${sslTagHtml}
         ${domainTagHtml}
       </div>
-      <div class="sparkline-container">
-        ${sparklineHtml}
-        <div class="latency-info">
-          <span style="font-family: var(--font-mono); font-weight: 600;">${site.latency || 0} ms</span>
-          <span class="badge ${badgeClass}">${badgeText}</span>
-        </div>
+      <div class="status-badge-container">
+        <span class="badge ${badgeClass}">${badgeText}</span>
       </div>
     </div>
     <div class="uptime-bar-container">
       <div class="uptime-bar-header">
         <span>过去 ${historyDays} 天可用率表现</span>
-        <span style="font-family: var(--font-mono);">${site.uptime30d || 99.98}% 可用</span>
+        <span style="font-family: var(--font-mono);">${site.uptime30d || 100}% 可用</span>
       </div>
       <div class="uptime-bars">
         ${barsHtml}
