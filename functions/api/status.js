@@ -47,15 +47,8 @@ async function handleStatusRequest(context) {
       statusMap = (await kv.get('status:snapshot', 'json')) || {};
       
       const allSites = globalConfig?.sites || getMockSites();
-      const hasGroupFilter = pageConfig.groups && pageConfig.groups.length > 0;
-      const hasSiteFilter = pageConfig.siteIds && pageConfig.siteIds.length > 0;
-
-      if (hasGroupFilter || hasSiteFilter) {
-        sites = allSites.filter(s => {
-          const matchGroup = hasGroupFilter && pageConfig.groups.includes(s.group || 'default');
-          const matchSite = hasSiteFilter && pageConfig.siteIds.includes(s.id);
-          return matchGroup || matchSite;
-        });
+      if (pageConfig.siteIds && pageConfig.siteIds.length > 0) {
+        sites = allSites.filter(s => pageConfig.siteIds.includes(s.id));
       } else {
         sites = allSites;
       }
@@ -75,25 +68,30 @@ async function handleStatusRequest(context) {
       };
 
       const allSites = globalConfig.sites && globalConfig.sites.length > 0 ? globalConfig.sites : getMockSites();
-      const hasGroupFilter = pageConfig.groups && pageConfig.groups.length > 0;
-      const hasSiteFilter = pageConfig.siteIds && pageConfig.siteIds.length > 0;
-
-      if (hasGroupFilter || hasSiteFilter) {
-        sites = allSites.filter(s => {
-          const matchGroup = hasGroupFilter && pageConfig.groups.includes(s.group || 'default');
-          const matchSite = hasSiteFilter && pageConfig.siteIds.includes(s.id);
-          return matchGroup || matchSite;
-        });
+      if (pageConfig.siteIds && pageConfig.siteIds.length > 0) {
+        sites = allSites.filter(s => pageConfig.siteIds.includes(s.id));
       } else {
         sites = allSites;
       }
     }
 
-    // Process site metrics
+    // Process site metrics & dynamic page group assignment
     const resultSites = sites.map(site => {
       const snap = statusMap[site.id] || { status: 'operational', latency: 42, history: [] };
+      
+      let assignedGroup = '默认监视分组';
+      if (pageConfig.groupSites && Object.keys(pageConfig.groupSites).length > 0) {
+        for (const [gName, sIds] of Object.entries(pageConfig.groupSites)) {
+          if (Array.isArray(sIds) && sIds.includes(site.id)) {
+            assignedGroup = gName;
+            break;
+          }
+        }
+      }
+
       return {
         ...site,
+        group: assignedGroup,
         status: snap.status || 'operational',
         latency: snap.latency || 42,
         history: snap.history || getMockHistory(),

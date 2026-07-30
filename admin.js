@@ -380,60 +380,97 @@ function switchTab(tabName) {
 
 /* Multi-Domain Custom Status Pages Controllers */
 function renderPagesTab() {
-  renderPageGroupsCheckboxes();
-  renderPageSitesCheckboxes();
+  renderPageGroupSitesBoxes();
   renderPagesTable(cachedConfig.pages || []);
 }
 
-function renderPageGroupsCheckboxes(selectedGroups = []) {
-  const container = document.getElementById('pageGroupsCheckboxContainer');
+function renderPageGroupSitesBoxes(currentGroupSites = {}) {
+  const container = document.getElementById('pageGroupSitesContainer');
   if (!container) return;
-  const groups = cachedConfig.groups || ['default'];
-  if (groups.length === 0) {
-    container.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem;">暂无可用分组</span>';
+
+  const groups = cachedConfig.groups && cachedConfig.groups.length > 0 ? cachedConfig.groups : ['默认分组'];
+  const sites = cachedConfig.sites || [];
+
+  if (sites.length === 0) {
+    container.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem;">暂无可用监控节点，请先在【📍 监控节点】中创建节点</span>';
     return;
   }
 
   container.innerHTML = groups.map(g => {
-    const checked = selectedGroups.includes(g) ? 'checked' : '';
+    const selectedSitesForGroup = currentGroupSites[g] || [];
+
+    const siteCheckboxesHtml = sites.map(s => {
+      const isChecked = selectedSitesForGroup.includes(s.id) ? 'checked' : '';
+      return `
+        <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; cursor: pointer; color: var(--text-primary);">
+          <input type="checkbox" class="page-site-cb" data-group="${g}" value="${s.id}" ${isChecked}>
+          <span>${s.name} <small style="color: var(--text-muted);">(${s.type.toUpperCase()})</small></span>
+        </label>
+      `;
+    }).join('');
+
     return `
-      <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; cursor: pointer; color: var(--text-primary);">
-        <input type="checkbox" class="page-group-checkbox" value="${g}" ${checked} onchange="onPageGroupCheckboxChange('${g}', this.checked)">
-        <span>📂 <strong>${g}</strong></span>
-      </label>
+      <div class="group-assignment-card" style="background: var(--bg-card-secondary); border: 1px solid var(--border-card); border-radius: 8px; padding: 0.85rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.4rem;">
+          <span style="font-weight: 600; color: var(--color-accent); font-size: 0.9rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -0.15em; margin-right: 0.3rem;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>${g}</span>
+          <button type="button" class="btn-secondary" style="padding: 0.15rem 0.4rem; font-size: 0.75rem; color: var(--color-red);" onclick="deletePageGroupSync('${g}')">删除分组</button>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.5rem;">
+          ${siteCheckboxesHtml}
+        </div>
+      </div>
     `;
   }).join('');
 }
 
-function onPageGroupCheckboxChange(groupName, isChecked) {
-  const sites = cachedConfig.sites || [];
-  const groupSiteIds = sites.filter(s => s.group === groupName).map(s => s.id);
-  
-  document.querySelectorAll('.page-site-checkbox').forEach(cb => {
-    if (groupSiteIds.includes(cb.value)) {
-      cb.checked = isChecked;
+async function addPageGroupSync() {
+  const input = document.getElementById('pageNewGroupInput');
+  const val = input ? input.value.trim() : '';
+  if (!val) {
+    showToast('请输入新分组名称', 'warning', '添加分组');
+    return;
+  }
+  if (!cachedConfig.groups) cachedConfig.groups = ['默认分组'];
+  if (cachedConfig.groups.includes(val)) {
+    showToast('该分组名称已存在', 'warning', '添加分组');
+    return;
+  }
+  cachedConfig.groups.push(val);
+  input.value = '';
+
+  const token = localStorage.getItem('edgepulse_admin_token') || 'dev_authenticated_token';
+  await saveConfig(cachedConfig, token, '新分组添加成功，已同步至设置与监控页！');
+  renderGroupTags(cachedConfig.groups);
+  renderPageGroupSitesBoxes(getCurrentPageFormGroupSites());
+}
+
+async function deletePageGroupSync(groupName) {
+  showKumoConfirm({
+    title: '确认删除分组',
+    message: `是否确定删除分组【${groupName}】？该操作将从系统设置与所有监控页中同步移除此分组。`,
+    confirmText: '确认删除',
+    onConfirm: async () => {
+      if (cachedConfig.groups) {
+        cachedConfig.groups = cachedConfig.groups.filter(g => g !== groupName);
+        if (cachedConfig.groups.length === 0) cachedConfig.groups = ['默认分组'];
+        const token = localStorage.getItem('edgepulse_admin_token') || 'dev_authenticated_token';
+        await saveConfig(cachedConfig, token, '分组已成功删除！');
+        renderGroupTags(cachedConfig.groups);
+        renderPageGroupSitesBoxes(getCurrentPageFormGroupSites());
+      }
     }
   });
 }
 
-function renderPageSitesCheckboxes(selectedSiteIds = []) {
-  const container = document.getElementById('pageSitesCheckboxContainer');
-  if (!container) return;
-  const sites = cachedConfig.sites || [];
-  if (sites.length === 0) {
-    container.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem;">暂无可用节点，请先在【📍 监控节点】中创建节点</span>';
-    return;
-  }
-
-  container.innerHTML = sites.map(s => {
-    const checked = selectedSiteIds.includes(s.id) ? 'checked' : '';
-    return `
-      <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; cursor: pointer; color: var(--text-primary);">
-        <input type="checkbox" class="page-site-checkbox" value="${s.id}" ${checked}>
-        <span>${s.name} <small style="color: var(--text-muted);">(${s.type.toUpperCase()})</small></span>
-      </label>
-    `;
-  }).join('');
+function getCurrentPageFormGroupSites() {
+  const currentMap = {};
+  (cachedConfig.groups || ['默认分组']).forEach(g => {
+    const checkedSiteIds = Array.from(document.querySelectorAll(`.page-site-cb[data-group="${g}"]:checked`)).map(cb => cb.value);
+    if (checkedSiteIds.length > 0) {
+      currentMap[g] = checkedSiteIds;
+    }
+  });
+  return currentMap;
 }
 
 function renderPagesTable(pages) {
@@ -451,9 +488,11 @@ function renderPagesTable(pages) {
   pages.forEach((page, idx) => {
     const tr = document.createElement('tr');
 
-    let groupsSummary = '<span style="color: var(--text-muted);">未限定分组</span>';
-    if (page.groups && page.groups.length > 0) {
-      groupsSummary = page.groups.map(g => `<span class="tag" style="background: rgba(246, 130, 31, 0.12); color: var(--color-accent); border: 1px solid var(--border-color); font-size: 0.75rem; padding: 0.1rem 0.4rem; border-radius: 4px; margin-right: 0.25rem; display: inline-block;">📂 ${g}</span>`).join('');
+    let groupsSummary = '<span style="color: var(--text-muted);">全部分组</span>';
+    if (page.groupSites && Object.keys(page.groupSites).length > 0) {
+      groupsSummary = Object.entries(page.groupSites).map(([g, sIds]) => 
+        `<span class="tag" style="background: rgba(246, 130, 31, 0.12); color: var(--color-accent); border: 1px solid var(--border-color); font-size: 0.75rem; padding: 0.1rem 0.4rem; border-radius: 4px; margin-right: 0.25rem; display: inline-block;">📂 ${g} (${sIds.length}项)</span>`
+      ).join('');
     }
 
     let sitesSummary = '<span style="color: var(--text-muted);">包含全部监控项</span>';
@@ -492,35 +531,41 @@ async function handleSaveCustomPage() {
     return;
   }
 
-  const selectedGroups = Array.from(document.querySelectorAll('.page-group-checkbox:checked')).map(cb => cb.value);
-  const selectedSiteIds = Array.from(document.querySelectorAll('.page-site-checkbox:checked')).map(cb => cb.value);
+  const groupSitesMap = {};
+  const allSelectedSiteIds = new Set();
+
+  (cachedConfig.groups || ['默认分组']).forEach(g => {
+    const checkedSiteIds = Array.from(document.querySelectorAll(`.page-site-cb[data-group="${g}"]:checked`)).map(cb => cb.value);
+    if (checkedSiteIds.length > 0) {
+      groupSitesMap[g] = checkedSiteIds;
+      checkedSiteIds.forEach(id => allSelectedSiteIds.add(id));
+    }
+  });
 
   if (!cachedConfig.pages) cachedConfig.pages = [];
+
+  const pageData = {
+    domain,
+    name: name || domain,
+    title,
+    announcement,
+    groupSites: groupSitesMap,
+    siteIds: Array.from(allSelectedSiteIds),
+  };
 
   if (editingId) {
     const index = cachedConfig.pages.findIndex(p => p.id === editingId);
     if (index !== -1) {
       cachedConfig.pages[index] = {
         ...cachedConfig.pages[index],
-        domain,
-        name: name || domain,
-        title,
-        announcement,
-        groups: selectedGroups,
-        siteIds: selectedSiteIds,
+        ...pageData
       };
     }
   } else {
-    const newPage = {
+    cachedConfig.pages.push({
       id: 'page-' + Date.now(),
-      domain,
-      name: name || domain,
-      title,
-      announcement,
-      groups: selectedGroups,
-      siteIds: selectedSiteIds,
-    };
-    cachedConfig.pages.push(newPage);
+      ...pageData
+    });
   }
 
   const token = localStorage.getItem('edgepulse_admin_token') || 'dev_authenticated_token';
@@ -542,8 +587,7 @@ function editCustomPage(index) {
   document.getElementById('pageAnnouncementInput').value = page.announcement || '';
   document.getElementById('cancelEditPageBtn').style.display = 'inline-block';
 
-  renderPageGroupsCheckboxes(page.groups || []);
-  renderPageSitesCheckboxes(page.siteIds || []);
+  renderPageGroupSitesBoxes(page.groupSites || {});
 }
 
 function deleteCustomPage(index) {
@@ -571,8 +615,7 @@ function resetPageForm() {
   document.getElementById('pageTitleConfigInput').value = '';
   document.getElementById('pageAnnouncementInput').value = '';
   document.getElementById('cancelEditPageBtn').style.display = 'none';
-  renderPageGroupsCheckboxes([]);
-  renderPageSitesCheckboxes([]);
+  renderPageGroupSitesBoxes({});
 }
 
 function toggleAdminFormFields() {
@@ -714,7 +757,6 @@ function renderSitesTable(sites) {
       <td style="white-space: nowrap;"><strong>${site.name}</strong></td>
       <td style="white-space: nowrap;"><span class="badge badge-operational">${site.type.toUpperCase()}</span></td>
       <td style="white-space: nowrap;"><div class="ellipsis-text" style="max-width: 220px;" title="${targetVal}">${targetVal}</div></td>
-      <td style="white-space: nowrap;">${site.group || 'default'}</td>
       <td style="white-space: nowrap; font-size: 1rem;">${itemIcons}</td>
       <td style="white-space: nowrap;"><span style="font-size: 0.8rem; color: var(--color-accent);">${channelsText}</span></td>
       <td style="white-space: nowrap;">
@@ -958,12 +1000,6 @@ async function handleCreateSite(event) {
     finalGroup = selectEl.value;
   }
 
-  let updatedGroups = activeGroupsList.includes(finalGroup) 
-    ? activeGroupsList 
-    : [...activeGroupsList, finalGroup];
-
-  activeGroupsList = updatedGroups;
-
   const checkDomain = document.getElementById('chkEnableDomainExpiry').checked;
   const checkSsl = document.getElementById('chkEnableSslExpiry').checked;
   const expiryFrequency = document.getElementById('expiryFrequency').value;
@@ -976,7 +1012,6 @@ async function handleCreateSite(event) {
     id: `site-${Date.now()}`,
     name,
     type,
-    group: finalGroup,
     checkDomain,
     checkSsl,
     expiryFrequency,
@@ -989,7 +1024,6 @@ async function handleCreateSite(event) {
 
   const updatedConfig = {
     ...cachedConfig,
-    groups: updatedGroups,
     sites: [...(cachedConfig.sites || []), newSite],
   };
 
