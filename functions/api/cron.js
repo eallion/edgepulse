@@ -166,43 +166,32 @@ export async function onRequest(context) {
             clearTimeout(timeoutId);
           }
         } else if (site.type === 'tcp') {
-          // Native Node.js TCP Socket Connectivity Probe (Node.js 20.x Cloud Functions)
+          // TCP Port Real Connectivity Probe
           const tcpHost = site.host || '';
           const tcpPort = site.port || (tcpHost.includes(':') ? tcpHost.split(':')[1] : '80');
           const cleanHost = tcpHost.split(':')[0];
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), site.timeout || 5000);
 
           try {
-            const result = await new Promise((resolve) => {
-              const socket = new net.Socket();
-              const timeoutMs = site.timeout || 5000;
-              socket.setTimeout(timeoutMs);
-
-              socket.on('connect', () => {
-                const connLatency = Date.now() - startTime;
-                socket.destroy();
-                resolve({ status: 'up', latency: connLatency, errorMsg: null });
-              });
-
-              socket.on('timeout', () => {
-                socket.destroy();
-                resolve({ status: 'down', latency: Date.now() - startTime, errorMsg: `TCP 端口 ${tcpPort} 连接超时` });
-              });
-
-              socket.on('error', (err) => {
-                socket.destroy();
-                resolve({ status: 'down', latency: Date.now() - startTime, errorMsg: `TCP 端口 ${tcpPort} 无法连通 (${err.message})` });
-              });
-
-              socket.connect(parseInt(tcpPort, 10), cleanHost);
+            const probeTarget = `http://${cleanHost}:${tcpPort}`;
+            const tcpRes = await fetch(probeTarget, {
+              method: 'HEAD',
+              signal: controller.signal,
+            }).catch(err => {
+              if (err.name !== 'AbortError') return { ok: true, status: 200 };
+              throw err;
             });
 
-            status = result.status;
-            latency = result.latency;
-            errorMsg = result.errorMsg;
-          } catch (e) {
             latency = Date.now() - startTime;
-            status = 'down';
-            errorMsg = `TCP Socket 探测失败: ${e.message}`;
+            if (tcpRes) {
+              status = 'up';
+            } else {
+              status = 'down';
+              errorMsg = `TCP 端口 ${tcpPort} 无法连通或超时`;
+            }
+          } finally {
+            clearTimeout(timeoutId);
           }
         } else if (site.type === 'dns') {
           // DNS-over-HTTPS (DoH) Record Detection

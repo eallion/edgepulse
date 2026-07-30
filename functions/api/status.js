@@ -8,6 +8,10 @@ export async function onRequest(context) {
   return handleStatusRequest(context);
 }
 
+export async function onRequestGet(context) {
+  return handleStatusRequest(context);
+}
+
 async function handleStatusRequest(context) {
   try {
     const request = context?.request || {};
@@ -42,12 +46,9 @@ async function handleStatusRequest(context) {
 
       statusMap = (await kv.get('status:snapshot', 'json')) || {};
       
-      const allSites = globalConfig?.sites || [];
-      const isDefaultPage = !pageConfig || pageConfig.id === 'default' || pageConfig.isDefault;
-      
-      if (!isDefaultPage && pageConfig.siteIds && Array.isArray(pageConfig.siteIds) && pageConfig.siteIds.length > 0) {
+      const allSites = globalConfig?.sites || getMockSites();
+      if (pageConfig.siteIds && pageConfig.siteIds.length > 0) {
         sites = allSites.filter(s => pageConfig.siteIds.includes(s.id));
-        if (sites.length === 0) sites = allSites;
       } else {
         sites = allSites;
       }
@@ -55,7 +56,7 @@ async function handleStatusRequest(context) {
       // Dev server fallback: read from globalThis singleton
       globalConfig = globalThis.__EDGEPULSE_CONFIG__ || {
         title: 'EdgePulse Status',
-        sites: [],
+        sites: getMockSites(),
       };
 
       const matchedPage = (globalConfig.pages || []).find(p => {
@@ -72,12 +73,9 @@ async function handleStatusRequest(context) {
         announcement: globalConfig.announcement || '',
       };
 
-      const allSites = globalConfig.sites && globalConfig.sites.length > 0 ? globalConfig.sites : [];
-      const isDefaultPage = !pageConfig || pageConfig.id === 'default' || pageConfig.isDefault;
-
-      if (!isDefaultPage && pageConfig.siteIds && Array.isArray(pageConfig.siteIds) && pageConfig.siteIds.length > 0) {
+      const allSites = globalConfig.sites && globalConfig.sites.length > 0 ? globalConfig.sites : getMockSites();
+      if (pageConfig.siteIds && pageConfig.siteIds.length > 0) {
         sites = allSites.filter(s => pageConfig.siteIds.includes(s.id));
-        if (sites.length === 0) sites = allSites;
       } else {
         sites = allSites;
       }
@@ -120,13 +118,11 @@ async function handleStatusRequest(context) {
     const resultSites = sites.map(site => {
       const snap = statusMap[site.id] || null;
       
-      let assignedGroup = site.group || '默认监视分组';
+      let assignedGroup = '默认监视分组';
       if (pageConfig.groupSites && Object.keys(pageConfig.groupSites).length > 0) {
-        let found = false;
         for (const [gName, sIds] of Object.entries(pageConfig.groupSites)) {
           if (Array.isArray(sIds) && sIds.includes(site.id)) {
             assignedGroup = gName;
-            found = true;
             break;
           }
         }

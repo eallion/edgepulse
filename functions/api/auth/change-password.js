@@ -7,6 +7,10 @@ export async function onRequest(context) {
   return handleChangePassword(context);
 }
 
+export async function onRequestPost(context) {
+  return handleChangePassword(context);
+}
+
 async function handleChangePassword(context) {
   const { request } = context;
   const kv = typeof MONITOR_KV !== 'undefined' ? MONITOR_KV : (typeof globalThis !== 'undefined' && globalThis.MONITOR_KV ? globalThis.MONITOR_KV : null);

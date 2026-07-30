@@ -8,6 +8,10 @@ export async function onRequest(context) {
   return handlePasskey(context);
 }
 
+export async function onRequestPost(context) {
+  return handlePasskey(context);
+}
+
 async function handlePasskey(context) {
   const { request } = context;
   const url = new URL(request.url);
