@@ -59,7 +59,13 @@ async function handleStatusRequest(context) {
         sites: getMockSites(),
       };
 
-      const matchedPage = (globalConfig.pages || []).find(p => p.domain && p.domain.toLowerCase() === host.toLowerCase());
+      const matchedPage = (globalConfig.pages || []).find(p => {
+        if (!p.domain) return false;
+        const target = p.domain.toLowerCase();
+        const currentHost = host.toLowerCase();
+        const currentHostname = url.hostname.toLowerCase();
+        return target === currentHost || target.startsWith(currentHost) || target === currentHostname || p.id === 'default' || p.isDefault;
+      });
 
       pageConfig = matchedPage || {
         title: globalConfig.title || 'EdgePulse Status',

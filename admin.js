@@ -537,7 +537,7 @@ function getAllPagesWithDefault() {
     return userPages;
   }
 
-  const currentHost = window.location.hostname || 'localhost';
+  const currentHost = window.location.host || window.location.hostname || 'localhost';
   const defaultPage = {
     id: 'default',
     isDefault: true,
@@ -580,7 +580,7 @@ function renderPagesTable() {
     }
 
     const domainDisplay = page.isDefault 
-      ? `<strong>${page.domain || window.location.hostname}</strong> <span class="badge" style="background: rgba(34, 197, 94, 0.15); color: var(--color-green); font-size: 0.7rem; margin-left: 0.35rem; font-weight: normal;">系统默认</span>`
+      ? `<strong>${page.domain || (window.location.host || window.location.hostname)}</strong> <span class="badge" style="background: rgba(34, 197, 94, 0.15); color: var(--color-green); font-size: 0.7rem; margin-left: 0.35rem; font-weight: normal;">系统默认</span>`
       : `<strong>${page.domain || '-'}</strong>`;
 
     const actionButtons = page.isDefault
@@ -605,7 +605,7 @@ async function handleSaveCustomPage() {
 
   let domain = document.getElementById('pageDomainInput').value.trim();
   if (isEditingDefault) {
-    domain = window.location.hostname || 'default';
+    domain = window.location.host || window.location.hostname || 'default';
   }
 
   const name = document.getElementById('pageNameInput').value.trim();
@@ -680,7 +680,7 @@ function editCustomPageById(id) {
   document.getElementById('pageEditingId').value = page.id;
   const domainInput = document.getElementById('pageDomainInput');
   if (domainInput) {
-    domainInput.value = isDefault ? (window.location.hostname || '当前主站域名') : (page.domain || '');
+    domainInput.value = isDefault ? (window.location.host || window.location.hostname || '当前主站域名') : (page.domain || '');
     domainInput.disabled = isDefault;
   }
 
