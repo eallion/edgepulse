@@ -666,17 +666,20 @@ function generateLongPushToken() {
   return 'pulse_sec_' + hex;
 }
 
-function generateOrRefreshNewSitePushUrl() {
+function generateOrRefreshNewSitePushUrl(forceRegen = false) {
   const input = document.getElementById('newSitePushUrl');
   const codeHint = document.getElementById('pushUrlCodeHint');
   const cronHint = document.getElementById('pushUrlCronHint');
   if (!input) return;
 
-  if (!input.value) {
+  if (!input.value || forceRegen) {
     const token = generateLongPushToken();
     const pushUrl = `${window.location.origin}/api/push?token=${token}`;
     input.value = pushUrl;
     input.setAttribute('data-token', token);
+    if (forceRegen) {
+      showToast('Push 专属 Token 已重新生成！', 'success', 'Token 刷新成功');
+    }
   }
   if (codeHint) codeHint.textContent = input.value;
   if (cronHint) cronHint.textContent = input.value;
@@ -709,11 +712,11 @@ function isRootDomain(hostname) {
 
 function onUrlOrHostInput() {
   const siteUrlEl = document.getElementById('newSiteUrl');
-  const badgeEl = document.getElementById('domainLevelBadge');
   const chkDomainItem = document.getElementById('chkDomainItem');
   const domainWarnDaysGroup = document.getElementById('domainWarnDaysGroup');
+  const chkEnableDomain = document.getElementById('chkEnableDomainExpiry');
 
-  if (!siteUrlEl || !badgeEl) return;
+  if (!siteUrlEl) return;
 
   const urlVal = siteUrlEl.value || '';
 
@@ -727,20 +730,12 @@ function onUrlOrHostInput() {
   const isApex = isRootDomain(hostname);
 
   if (isApex && hostname) {
-    badgeEl.textContent = '根域名 (Apex Domain)';
-    badgeEl.style.color = 'var(--color-green)';
     if (chkDomainItem) chkDomainItem.style.display = 'flex';
     if (domainWarnDaysGroup) domainWarnDaysGroup.style.display = 'block';
-  } else if (hostname) {
-    badgeEl.textContent = '子域名 (Subdomain - 仅监控 SSL 证书)';
-    badgeEl.style.color = 'var(--color-accent)';
+  } else {
     if (chkDomainItem) chkDomainItem.style.display = 'none';
     if (domainWarnDaysGroup) domainWarnDaysGroup.style.display = 'none';
-    const chkEnableDomain = document.getElementById('chkEnableDomainExpiry');
     if (chkEnableDomain) chkEnableDomain.checked = false;
-  } else {
-    badgeEl.textContent = '识别中...';
-    badgeEl.style.color = 'var(--text-muted)';
   }
 }
 
@@ -1072,6 +1067,12 @@ async function handleCreateSite(event) {
     dnsExpected = document.getElementById('newSiteDnsExpected')?.value.trim() || '';
   }
 
+  const port = document.getElementById('newSitePort')?.value.trim() || '';
+  let finalHost = host;
+  if (type === 'tcp' && port && host && !host.includes(':')) {
+    finalHost = `${host}:${port}`;
+  }
+
   const checkDomain = document.getElementById('chkEnableDomainExpiry').checked;
   const checkSsl = document.getElementById('chkEnableSslExpiry').checked;
   const expiryFrequency = document.getElementById('expiryFrequency').value;
@@ -1091,7 +1092,8 @@ async function handleCreateSite(event) {
     sslWarnDays,
     alertChannels: selectedChannels,
     ...(type === 'dns' && { dnsType, dnsExpected }),
-    ...(type === 'push' ? { url: pushUrlVal, pushToken: pushTokenVal } : { ...(url && { url }), ...(host && { host }) }),
+    ...(type === 'tcp' && { port }),
+    ...(type === 'push' ? { url: pushUrlVal, pushToken: pushTokenVal } : { ...(url && { url }), ...(finalHost && { host: finalHost }) }),
   };
 
   const updatedConfig = {

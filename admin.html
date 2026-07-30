@@ -220,9 +220,17 @@
               <label>目标 URL</label>
               <input type="url" id="newSiteUrl" placeholder="https://example.com" oninput="onUrlOrHostInput()">
             </div>
-            <div class="form-group" id="adminHostGroup" style="display: none;">
-              <label id="adminHostLabel">目标 IP / Host</label>
-              <input type="text" id="newSiteHost" placeholder="1.2.3.4 或 db.example.com">
+            <div id="adminHostGroup" style="display: none;">
+              <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 0.75rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label id="adminHostLabel">目标 IP / Host</label>
+                  <input type="text" id="newSiteHost" placeholder="1.2.3.4 或 db.example.com">
+                </div>
+                <div class="form-group" id="adminPortGroup" style="margin-bottom: 0;">
+                  <label>端口 (Port)</label>
+                  <input type="number" id="newSitePort" placeholder="例如: 22 / 8080">
+                </div>
+              </div>
             </div>
 
             <!-- DNS Monitoring Config Panel -->
@@ -256,6 +264,11 @@
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                 </button>
               </div>
+              <div style="display: flex; justify-content: flex-end; margin-top: 0.4rem;">
+                <button type="button" class="btn-secondary" onclick="generateOrRefreshNewSitePushUrl(true)" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.3rem;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/></svg>重新生成 Token
+                </button>
+              </div>
 
               <!-- Explanation Card -->
               <div style="background: var(--bg-card-secondary); border: 1px solid var(--border-card); border-radius: 8px; padding: 0.85rem; margin-top: 0.75rem;">
@@ -285,11 +298,12 @@
             <!-- Intelligent Expiry Monitor Panel -->
             <div class="expiry-panel" id="expiryMonitorPanel">
               <div style="font-weight: 600; font-size: 0.9rem; color: var(--color-accent); margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
-                <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -0.15em; margin-right: 0.3rem;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>智能到期监控规则 (<span id="domainLevelBadge">识别中...</span>)</span>
+                <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -0.15em; margin-right: 0.3rem;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>监控域名和证书</span>
+                <span id="domainLevelBadge" style="display: none; font-size: 0.8rem; font-weight: normal; color: var(--text-muted);"></span>
               </div>
               <div class="checkbox-group">
-                <label class="kumo-switch" id="chkDomainItem">
-                  <input type="checkbox" id="chkEnableDomainExpiry" checked>
+                <label class="kumo-switch" id="chkDomainItem" style="display: none;">
+                  <input type="checkbox" id="chkEnableDomainExpiry">
                   <span class="kumo-switch-track"><span class="kumo-switch-thumb"></span></span>
                   <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -0.15em; margin-right: 0.3rem;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>监控域名到期时间</span>
                 </label>
@@ -309,7 +323,7 @@
                     <option value="monthly">Monthly 每月</option>
                   </select>
                 </div>
-                <div id="domainWarnDaysGroup">
+                <div id="domainWarnDaysGroup" style="display: none;">
                   <label style="font-size: 0.8rem; color: var(--text-secondary);">域名提前提醒天数</label>
                   <input type="number" id="domainWarnDays" value="30" placeholder="默认 30 天">
                 </div>
